@@ -1,0 +1,31 @@
+{
+  "auth": "zef:dwarring",
+  "authors": [
+    "David Warring"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+    "CSS::Specification:ver<0.5.0+>"
+  ],
+    "description": "RakuAST based compiler for CSS Specification mini-syntax (experimental)",
+  "license": "Artistic-2.0",
+    "name": "CSS::Specification::Compiler",
+  "perl": "6.c",
+  "provides": {
+    "CSS::Specification::Compiler": "lib/CSS/Specification/Compiler.rakumod",
+    "CSS::Specification::Compiler::Util": "lib/CSS/Specification/Compiler/Util.rakumod",
+    "CSS::Specification::Compiler::Grammars": "lib/CSS/Specification/Compiler/Grammars.rakumod",
+    "CSS::Specification::Compiler::Roles": "lib/CSS/Specification/Compiler/Roles.rakumod",
+    "CSS::Specification::Compiler::Actions": "lib/CSS/Specification/Compiler/Actions.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "https://github.com/css-raku/CSS-Specification-Compiler-raku.git",
+  "tags": [
+      "rakuast", "css"
+  ],
+  "test-depends": [
+  ],
+  "version": "0.4.15"
+}
