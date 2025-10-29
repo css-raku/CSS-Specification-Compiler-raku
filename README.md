@@ -14,20 +14,20 @@ $compiler.load-defs: "examples/css21-aural.txt";
 mkdir 'lib/MyCSS';
 
 # output main grammar
-"lib/MyCSS/Grammar.rakumod".IO.spurt: .DEPARSE
+'lib/MyCSS/Grammar.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-grammar: <MyCSS Grammar>;
 
 # output grammar actions
-"lib/MyCSS/Actions.rakumod".IO.spurt: .DEPARSE
+'lib/MyCSS/Actions.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-actions: <MyCSS Actions>;
 
 # output stubs for external rule references
-"lib/MyCSS/Externals.rakumod".IO.spurt: .DEPARSE
+'lib/MyCSS/Externals.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-role: <MyCSS Externals>;
 
 # output associated metadata
 mkdir 'resources';
-'resources/MyCSSMeta.json".IO.spurt: to-json: $compiler.metadata;
+'resources/MyCSSMeta.json'.IO.spurt: to-json($compiler.metadata, :sorted-keys);
 ```
 
 Description

@@ -35,7 +35,7 @@ method load-defs($properties-spec) {
 }
 
 method metadata {
-    @!defs.&build-metadata: %.child-props;
+    @!defs.&build-metadata: :%.child-props;
 }
 
 sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
