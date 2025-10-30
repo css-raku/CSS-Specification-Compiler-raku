@@ -14,12 +14,8 @@ use CSS::Specification::Actions;
 has CSS::Specification::Actions:D $.actions handles<child-props> .= new;
 has Associative @.defs;
 
-method load-defs($properties-spec) {
-    my $fh = $properties-spec
-        ?? $properties-spec.&open(:r)
-        !! $*IN;
-
-    for $fh.lines -> $prop-spec {
+multi method load-defs(:@lines!) is hidden-from-backtrace {
+    for @lines -> $prop-spec {
         # handle full line comments
         next if $prop-spec.starts-with('#') || $prop-spec eq '';
         # '| inherit' and '| initial' are implied anyway; get rid of them
@@ -32,6 +28,16 @@ method load-defs($properties-spec) {
     }
 
     @!defs;
+}
+
+multi method load-defs(IO:D() :$file!) is hidden-from-backtrace {
+    my @lines = $file.lines;
+    self.load-defs: :@lines;
+}
+
+multi method load-defs() is hidden-from-backtrace {
+    my @lines = $*IN.lines;
+    self.load-defs: :@lines;
 }
 
 method metadata {
@@ -101,11 +107,12 @@ sub check-edges(%props) {
         note "box property doesn't have four edges $key: $edges"
             if $edges && +$edges != 4;
 
-        my $children = $value<children>;
-        if $value<edge> && $children {
-            my $non-edges = $children.grep: { ! %props{$_}<edge> };
-            note "edge property $key has non-edge properties: $non-edges"
-                if $non-edges;
+        if $value<children> -> $children {
+            if $value<edge> {
+                my $non-edges = $children.grep: { ! %props{$_}<edge> };
+                note "edge property $key has non-edge properties: $non-edges"
+                    if $non-edges;
+            }
         }
     }
 }

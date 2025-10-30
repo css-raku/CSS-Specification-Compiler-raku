@@ -8,7 +8,7 @@ Synopsis
 use CSS::Specification::Compiler;
 my CSS::Specification::Compiler $compiler .= new;
 use JSON::Fast;
-$compiler.load-defs: "examples/css21-aural.txt";
+$compiler.load-defs: :file<examples/css21-aural.txt>;
 
 # output Raku code
 mkdir 'lib/MyCSS';
@@ -32,8 +32,12 @@ mkdir 'resources';
 
 Description
 -----------
-This is an internal module, used by
-CSS::Module to build modules: CSS::Module::{CSS1|CSS21|CSS3|SVG}".
+This module is used to compile [CSS property definitions](https://www.w3.org/TR/css-values-3/)
+to Raku Grammars, Actions and Roles, and to extract meta-data.
+
+[CSS::Module](https://raku.land/zef:dwarring/CSS::Module), or similar, can then be used to bundle
+the definitions for use by [CSS::Properties](https://raku.land/zef:dwarring/CSS::Properties) and
+other CSS related modules.
 
 Status
 ------
