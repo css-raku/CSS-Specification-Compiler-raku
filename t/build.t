@@ -10,10 +10,10 @@ my @actions-id = @base-id.Slip, 'Actions';
 my @role-id = @base-id.Slip, 'Interface';
 my @grammar-id = @base-id.Slip, 'Grammar';
 
-my $input-path = $*SPEC.catfile('examples', 'css21-aural.txt');
+my $file = $*SPEC.catfile('examples', 'css21-aural.txt');
 
 my CSS::Specification::Compiler $compiler .= new;
-$compiler.load-defs($input-path);
+$compiler.load-defs(:$file);
 
 sub name(RakuAST::Package $p, $j) {
     $p.name.parts>>.name.join: $j

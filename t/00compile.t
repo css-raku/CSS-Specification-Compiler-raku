@@ -10,13 +10,17 @@ use CSS::Specification::Compiler::Actions;
 use CSS::Specification::Compiler::Grammars :&compile;
 use experimental :rakuast;
 
+sub tidy($_) {
+    .subst: /\s+/, ' ', :g
+}
+
 lives-ok {require CSS::Grammar:ver(v0.3.0..*) }, "CSS::Grammar version";
 
 for (
     'spec' => {
         input => 'thin',
         ast   => :keywords['thin'],
-        deparse => 'thin & <keyw> ',
+        deparse => 'thin & <keyw>',
     },
     'spec' => {
         input => 'thin?',
@@ -26,7 +30,7 @@ for (
     'spec' => {
         input => 'thick | thin',
         ast => :keywords[ 'thick', 'thin' ],
-        deparse => '[thick | thin ]& <keyw> ',
+        deparse => '[thick | thin ]& <keyw>',
     },
     'spec' => {
         input => '35 | 7',
@@ -36,7 +40,7 @@ for (
     'spec' => {
         input => '35 | 7 | 42?',
         ast => :alt[:numbers[35, 7], :occurs["?", :num(42)]],
-        deparse => '[35 | 7 ]& <number> || [42 & <number>] ? ',
+        deparse => '[35 | 7 ]& <number> || [42 & <number>] ?',
     },
     'spec' => {
         input => "<rule-ref>",
@@ -53,13 +57,13 @@ for (
     'spec' => {
         input => "<rule-ref> [ 'css21-prop-ref' <'css3-prop-ref'> ] ?",
         ast => :seq[:rule<rule-ref>, :occurs["?", :group( :seq[:rule<expr-css21-prop-ref>, :rule<expr-css3-prop-ref> ]) ] ],
-        deparse => "<rule-ref> [<expr-css21-prop-ref> <expr-css3-prop-ref> ] ? ",
+        deparse => "<rule-ref> [<expr-css21-prop-ref> <expr-css3-prop-ref> ] ?",
         rule-refs => ["expr-css21-prop-ref", "expr-css3-prop-ref", "rule-ref"],
     },
     'spec' => {
         input => "<rule-ref> [, [ 'css21-prop-ref' | <'css3-prop-ref'> ] ]*",
         ast => :seq[ :rule<rule-ref>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<expr-css21-prop-ref>, :rule<expr-css3-prop-ref>])])]],
-        deparse => '<rule-ref> [<op(",")> [<expr-css21-prop-ref> || <expr-css3-prop-ref> ] ] * ',
+        deparse => '<rule-ref> [<op(",")> [<expr-css21-prop-ref> || <expr-css3-prop-ref> ] ] *',
         rule-refs => ["expr-css21-prop-ref", "expr-css3-prop-ref", "rule-ref"],
     },
     'spec' => {
@@ -106,13 +110,15 @@ for (
     'spec' => {
         input => 'bold thin && <length>',
         ast => :required[:seq[:keywords["bold"], :keywords["thin"]], :rule("length")],
-        deparse => "[:my \@S\n; bold \& <keyw>  thin \& <keyw>  <!\{\n    \@S[0]++\n}>| <length><!\{\n    \@S[1]++\n}>]** 2",
+        :tidy,
+        deparse => '[bold & <keyw> thin & <keyw> :my $a ; <!{ $a++ }>| <length>:my $b ; <!{ $b++ }>]** 2',
         rule-refs => ['length'],
     },
     'spec' => {
         input => 'bold || thin && <length>',
         ast => :combo[:keywords["bold"], :required[:keywords["thin"], :rule("length")]],
-        deparse => "[:my \@S\n; bold \& <keyw> <!\{\n    \@S[0]++\n}>| [:my \@S\n; thin \& <keyw> <!\{\n    \@S[0]++\n}>| <length><!\{\n    \@S[1]++\n}>]** 2<!\{\n    \@S[1]++\n}>]+",
+        :tidy,
+        deparse => '[bold & <keyw> :my $a ; <!{ $a++ }>| [thin & <keyw> :my $a ; <!{ $a++ }>| <length>:my $b ; <!{ $b++ }>]** 2:my $b ; <!{ $b++ }>]+',
         rule-refs => ['length'],
     },
     'property-spec' => {
@@ -127,8 +133,7 @@ for (
         deparse => join("\n",
                         '#| border-color: <color>{1,4}',
                         'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.expr-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
-                        'rule expr-border-color { :i <color> }',
-                       ''),
+                        'rule expr-border-color { :i <color> }'),
     },
    'property-spec' => {
         input => "'min-width'\t<length> | <percentage> | inherit\t0",
@@ -143,7 +148,7 @@ for (
                         '#| min-width: <length> | <percentage> | inherit',
                         'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.expr-min-width> /, &?ROUTINE.WHY)>}',
                         'rule expr-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
-                       ''),
+                       ),
     },
     'property-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
                         :ast{:props['content'],
@@ -168,7 +173,6 @@ for (
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
                                         'rule decl:sym<content> { :i (content) ":" <val(/<expr=.expr-content> /, &?ROUTINE.WHY)>}',
                                         'rule expr-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
-                                        ''
                                        ),
 
     },
@@ -184,26 +188,30 @@ for (
     my $deparse := $expected<deparse>;
     my $rule-refs := $expected<rule-refs>;
 
-    my @*PROP-NAMES = [];
+    subtest $input, {
+        my @*PROP-NAMES = [];
 
-    my CSS::Specification::Actions $actions .= new;
+        my CSS::Specification::Actions $actions .= new;
 
-    my $parse = CSS::Grammar::Test::parse-tests(
-        CSS::Specification, $input,
-        :$rule,
-        :$actions,
-        :suite<spec>,
-        :$expected
-    );
+        my $parse = CSS::Grammar::Test::parse-tests(
+            CSS::Specification, $input,
+            :$rule,
+            :$actions,
+            :suite<spec>,
+            :$expected
+        );
 
-    with $deparse {
-        my $AST = RakuAST::StatementList.new: |compile(|$parse.ast);
-        is $AST.DEPARSE, $_, 'deparse';
-    }
+        with $deparse {
+            my $AST = RakuAST::StatementList.new: |compile(|$parse.ast);
+            my $s = $AST.DEPARSE;
+            $s .= &tidy if $expected<tidy>;
+            is $s.trim, $_, 'deparse';
+        }
 
-    my @refs = $actions.rule-refs.keys.sort.Array;
-    if @refs || $rule-refs {
-        is-deeply @refs, $rule-refs, "rule-refs";
+        my @refs = $actions.rule-refs.keys.sort.Array;
+        if @refs || $rule-refs {
+            is-deeply @refs, $rule-refs, "rule-refs";
+        }
     }
 }
 

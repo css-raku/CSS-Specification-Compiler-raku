@@ -193,16 +193,14 @@ multi sub postfix($operand, $postfix) {
     )
 }
 
-sub unseen(Int:D $id) is export {
-    my RakuAST::Postcircumfix $op = $id.&arg.&array-index;
-    my RakuAST::Var $operand = '@S'.&lexical;
-    my RakuAST::Block $block .= new(
-        body => RakuAST::Blockoid.new(
-            statements(
-                expression $operand.&postfix($op).&postfix('++')
-            )
+sub unseen(Str:D $var) is export {
+    my RakuAST::Var $operand = $var.&lexical;
+    my RakuAST::Blockoid $body .= new(
+        RakuAST::StatementList.new(
+            expression $operand.&postfix('++')
         )
     );
+    my RakuAST::Block $block .= new: :$body;
     RakuAST::Regex::Assertion::PredicateBlock.new(
         :$block, :negated,
     )
@@ -249,21 +247,20 @@ multi sub compile(:required(@combo)!) {
 }
 
 multi sub compile(:@combo!, Bool :$required) {
-    my constant Seen-Decl = RakuAST::Regex::Statement.new(
-        RakuAST::VarDeclaration::Simple.new(
-            sigil       => "\@",
-            desigilname => RakuAST::Name.from-identifier('S')
-        ).&expression
-    );
-    my UInt $n = 0;
+    my Str $v = 'a';
     my @atoms = @combo.map: {
-        my RakuAST::Regex::Assertion $seen = $n++.&unseen;
+        my \id = $v++;
+        my RakuAST::VarDeclaration::Simple $decl .= new(
+            :sigil('$'),
+            desigilname => RakuAST::Name.from-identifier(id),
+        );
+        my RakuAST::Regex::Statement $decl-stmt .= new: $decl.&expression;
+        my RakuAST::Regex::Assertion $seen = ('$'~id).&unseen;
         my RakuAST::Regex $term = .&compile;
-        my @seq = [$term, $seen];
-        @seq.unshift: Seen-Decl if $n == 1;
-        @seq.&seq;
+        [$term, $decl-stmt, $seen].&seq;
     }
     my $atom = @atoms == 1 ?? @atoms.head !! @atoms.&alt.&group;
+    my UInt $n = +@combo;
     my RakuAST::Regex::Quantifier $quantifier = $required
         ?? quant([$n, $n])
         !! quant('+');

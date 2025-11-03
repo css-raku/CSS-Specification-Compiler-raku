@@ -1,10 +1,10 @@
 grammar Test::CSS::Aural::Spec::Grammar {
     #| azimuth: <angle> | [[ left-side | far-left | left | center-left | center | center-right | right | far-right | right-side ] || behind ] | leftwards | rightwards
     rule decl:sym<azimuth> {     :i (azimuth) ":" <val(/<expr=.expr-azimuth> /, &?ROUTINE.WHY)>}
-    rule expr-azimuth { :i <angle> || [[:my @S; [["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ]<!{
-        @S[0]++
-    }>| behind & <keyw> <!{
-        @S[1]++
+    rule expr-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ]:my $a; <!{
+        $a++
+    }>| behind & <keyw> :my $b; <!{
+        $b++
     }>]+] || [leftwards | rightwards ]& <keyw>   }
     #| cue-after: <uri> | none
     rule decl:sym<cue-after> {     :i ("cue-after") ":" <val(/<expr=.expr-cue-after> /, &?ROUTINE.WHY)>}
@@ -14,10 +14,10 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule expr-cue-before { :i <uri> || none & <keyw>   }
     #| cue: [ 'cue-before' || 'cue-after' ]
     rule decl:sym<cue> {     :i (cue) ":" <val(/<expr=.expr-cue> /, &?ROUTINE.WHY)>}
-    rule expr-cue { :i [[:my @S; <expr-cue-before><!{
-        @S[0]++
-    }>| <expr-cue-after><!{
-        @S[1]++
+    rule expr-cue { :i [[<expr-cue-before>:my $a; <!{
+        $a++
+    }>| <expr-cue-after>:my $b; <!{
+        $b++
     }>]+] }
     #| elevation: <angle> | below | level | above | higher | lower
     rule decl:sym<elevation> {     :i (elevation) ":" <val(/<expr=.expr-elevation> /, &?ROUTINE.WHY)>}
@@ -39,10 +39,10 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule expr-pitch { :i <frequency> || ["x-low" | low | medium | high | "x-high" ]& <keyw>   }
     #| play-during: <uri> [ mix || repeat ]? | auto | none
     rule decl:sym<play-during> {     :i ("play-during") ":" <val(/<expr=.expr-play-during> /, &?ROUTINE.WHY)>}
-    rule expr-play-during { :i <uri> [[:my @S; mix & <keyw> <!{
-        @S[0]++
-    }>| repeat & <keyw> <!{
-        @S[1]++
+    rule expr-play-during { :i <uri> [[mix & <keyw> :my $a; <!{
+        $a++
+    }>| repeat & <keyw> :my $b; <!{
+        $b++
     }>]+] ?  || [auto | none ]& <keyw>   }
     #| richness: <number>
     rule decl:sym<richness> {     :i (richness) ":" <val(/<expr=.expr-richness> /, &?ROUTINE.WHY)>}
