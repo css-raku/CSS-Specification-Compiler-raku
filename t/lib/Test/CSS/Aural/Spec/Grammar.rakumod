@@ -1,9 +1,9 @@
 grammar Test::CSS::Aural::Spec::Grammar {
     #| azimuth: <angle> | [[ left-side | far-left | left | center-left | center | center-right | right | far-right | right-side ] || behind ] | leftwards | rightwards
     rule decl:sym<azimuth> {     :i (azimuth) ":" <val(/<expr=.expr-azimuth> /, &?ROUTINE.WHY)>}
-    rule expr-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ]:my $a; <!{
+    rule expr-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ] :my $a; <!{
         $a++
-    }>| behind & <keyw> :my $b; <!{
+    }>| behind & <keyw>  :my $b; <!{
         $b++
     }>]+] || [leftwards | rightwards ]& <keyw>   }
     #| cue-after: <uri> | none
@@ -14,9 +14,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule expr-cue-before { :i <uri> || none & <keyw>   }
     #| cue: [ 'cue-before' || 'cue-after' ]
     rule decl:sym<cue> {     :i (cue) ":" <val(/<expr=.expr-cue> /, &?ROUTINE.WHY)>}
-    rule expr-cue { :i [[<expr-cue-before>:my $a; <!{
+    rule expr-cue { :i [[<expr-cue-before> :my $a; <!{
         $a++
-    }>| <expr-cue-after>:my $b; <!{
+    }>| <expr-cue-after> :my $b; <!{
         $b++
     }>]+] }
     #| elevation: <angle> | below | level | above | higher | lower
@@ -39,9 +39,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule expr-pitch { :i <frequency> || ["x-low" | low | medium | high | "x-high" ]& <keyw>   }
     #| play-during: <uri> [ mix || repeat ]? | auto | none
     rule decl:sym<play-during> {     :i ("play-during") ":" <val(/<expr=.expr-play-during> /, &?ROUTINE.WHY)>}
-    rule expr-play-during { :i <uri> [[mix & <keyw> :my $a; <!{
+    rule expr-play-during { :i <uri> [[mix & <keyw>  :my $a; <!{
         $a++
-    }>| repeat & <keyw> :my $b; <!{
+    }>| repeat & <keyw>  :my $b; <!{
         $b++
     }>]+] ?  || [auto | none ]& <keyw>   }
     #| richness: <number>

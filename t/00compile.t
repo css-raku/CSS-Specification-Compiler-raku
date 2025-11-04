@@ -111,14 +111,14 @@ for (
         input => 'bold thin && <length>',
         ast => :required[:seq[:keywords["bold"], :keywords["thin"]], :rule("length")],
         :tidy,
-        deparse => '[bold & <keyw> thin & <keyw> :my $a ; <!{ $a++ }>| <length>:my $b ; <!{ $b++ }>]** 2',
+        deparse => '[bold & <keyw> thin & <keyw> :my $a ; <!{ $a++ }>| <length> :my $b ; <!{ $b++ }>]** 2',
         rule-refs => ['length'],
     },
     'spec' => {
         input => 'bold || thin && <length>',
         ast => :combo[:keywords["bold"], :required[:keywords["thin"], :rule("length")]],
         :tidy,
-        deparse => '[bold & <keyw> :my $a ; <!{ $a++ }>| [thin & <keyw> :my $a ; <!{ $a++ }>| <length>:my $b ; <!{ $b++ }>]** 2:my $b ; <!{ $b++ }>]+',
+        deparse => '[bold & <keyw> :my $a ; <!{ $a++ }>| [thin & <keyw> :my $a ; <!{ $a++ }>| <length> :my $b ; <!{ $b++ }>]** 2 :my $b ; <!{ $b++ }>]+',
         rule-refs => ['length'],
     },
     'property-spec' => {

@@ -257,7 +257,7 @@ multi sub compile(:@combo!, Bool :$required) {
         my RakuAST::Regex::Statement $decl-stmt .= new: $decl.&expression;
         my RakuAST::Regex::Assertion $seen = ('$'~id).&unseen;
         my RakuAST::Regex $term = .&compile;
-        [$term, $decl-stmt, $seen].&seq;
+        [$term.&ws, $decl-stmt, $seen].&seq;
     }
     my $atom = @atoms == 1 ?? @atoms.head !! @atoms.&alt.&group;
     my UInt $n = +@combo;
