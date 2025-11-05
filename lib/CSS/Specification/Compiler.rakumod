@@ -50,7 +50,7 @@ sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
     for @defs .grep(*.<props>).sort(*.<props>[0]) {
         my $name = .<props>[0];
         my %details = .<synopsis>:kv;
-        %details<inherit> = $_ with .<inherit>;
+        %details<inherit> = .<inherit>.so;
         %details<default> = $_ with .<default>;
 
         for .<props>.flat -> $prop-name {

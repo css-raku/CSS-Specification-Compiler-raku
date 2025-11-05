@@ -1,8 +1,8 @@
 class Test::CSS::Aural::Spec::Actions {
-    method expr-cue-after ($/) {
+    method val-cue-after ($/) {
         make $.build.list($/)
     }
-    method expr-cue-before ($/) {
+    method val-cue-before ($/) {
         make $.build.list($/)
     }
     method generic-voice ($/) {

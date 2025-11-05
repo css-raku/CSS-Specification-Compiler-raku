@@ -20,11 +20,11 @@ sub rule(RakuAST::Name:D $name, RakuAST::Regex:D $body) {
         )
 }
 
-sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-expr!) {
+sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
     my RakuAST::Name $name = "decl:sym<$prop-name>".&name;
     my RakuAST::Regex $regex-body = RakuAST::Regex::Assertion::Alias.new(
         name      => "expr",
-        assertion => $base-expr.&assertion(:!capturing),
+        assertion => $base-val.&assertion(:!capturing),
     );
 
     if $quant ~~ Array:D {
@@ -72,11 +72,12 @@ multi sub compile(:@props!, :$default, Pair :$spec! is copy, Str :$synopsis!, Bo
     my RakuAST::Statement::Expression @exprs;
 
     for @props -> $prop {
-        my $base-expr = 'expr-' ~ $prop;
-        @exprs.push: $prop.&property-decl(:$quant, :$base-expr).declarator-docs(
+        my $base-val = 'val-' ~ $prop;
+        @exprs.push: $prop.&property-decl(:$quant, :$base-val).declarator-docs(
             :$leading
         ).&expression;
-        @exprs.push: $base-expr.&name.&rule($body).&expression;
+        @exprs.push: $base-val.&name.&rule($body).&expression
+            unless $*ACTIONS.rules{$base-val};
     }
 
     @exprs;
@@ -272,6 +273,7 @@ multi sub compile(:@combo!, Bool :$required) {
 multi sub compile($arg) { compile |$arg }
 
 method build-grammar(@grammar-id, Str :$scope = 'our') {
+    my $*ACTIONS = $.actions;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
     my RakuAST::Statement::Expression @compiled = flat @.defs.map: &compile;
     my RakuAST::StatementList $statements .= new: |@compiled;

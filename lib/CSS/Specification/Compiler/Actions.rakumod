@@ -48,16 +48,16 @@ method !actions-methods {
         :parameters( '$/'.&param )
     );
 
-    my $expr-body = 'list'.&build-action;
+    my $val-body = 'list'.&build-action;
     my $rule-body = 'rule'.&build-action;
 
     for @.defs -> $def {
         with $def<props> -> @props {
             for @props -> $prop {
-                my $expr = 'expr-' ~ $prop;
-                if %references{$expr}:delete {
-                    my RakuAST::Name $name = $expr.&name;
-                    @methods.push: RakuAST::Method.new: :$name, :$signature, body => $expr-body;
+                my $val = 'val-' ~ $prop;
+                if %references{$val}:delete && !$.actions.rules{$val} {
+                    my RakuAST::Name $name = $val.&name;
+                    @methods.push: RakuAST::Method.new: :$name, :$signature, body => $val-body;
                 }
             }
         }

@@ -50,21 +50,21 @@ for (
     },
     'spec' => {
         input => "'css21-prop-ref'",
-        ast => :rule<expr-css21-prop-ref>,
-        deparse => "<expr-css21-prop-ref>",
-        rule-refs => ['expr-css21-prop-ref'],
+        ast => :rule<val-css21-prop-ref>,
+        deparse => "<val-css21-prop-ref>",
+        rule-refs => ['val-css21-prop-ref'],
     },
     'spec' => {
         input => "<rule-ref> [ 'css21-prop-ref' <'css3-prop-ref'> ] ?",
-        ast => :seq[:rule<rule-ref>, :occurs["?", :group( :seq[:rule<expr-css21-prop-ref>, :rule<expr-css3-prop-ref> ]) ] ],
-        deparse => "<rule-ref> [<expr-css21-prop-ref> <expr-css3-prop-ref> ] ?",
-        rule-refs => ["expr-css21-prop-ref", "expr-css3-prop-ref", "rule-ref"],
+        ast => :seq[:rule<rule-ref>, :occurs["?", :group( :seq[:rule<val-css21-prop-ref>, :rule<val-css3-prop-ref> ]) ] ],
+        deparse => "<rule-ref> [<val-css21-prop-ref> <val-css3-prop-ref> ] ?",
+        rule-refs => ["rule-ref", "val-css21-prop-ref", "val-css3-prop-ref"],
     },
     'spec' => {
         input => "<rule-ref> [, [ 'css21-prop-ref' | <'css3-prop-ref'> ] ]*",
-        ast => :seq[ :rule<rule-ref>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<expr-css21-prop-ref>, :rule<expr-css3-prop-ref>])])]],
-        deparse => '<rule-ref> [<op(",")> [<expr-css21-prop-ref> || <expr-css3-prop-ref> ] ] *',
-        rule-refs => ["expr-css21-prop-ref", "expr-css3-prop-ref", "rule-ref"],
+        ast => :seq[ :rule<rule-ref>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<val-css21-prop-ref>, :rule<val-css3-prop-ref>])])]],
+        deparse => '<rule-ref> [<op(",")> [<val-css21-prop-ref> || <val-css3-prop-ref> ] ] *',
+        rule-refs => ["rule-ref", "val-css21-prop-ref", "val-css3-prop-ref"],
     },
     'spec' => {
         input => '<length>{4}',
@@ -132,8 +132,8 @@ for (
         rule-refs => ['color'],
         deparse => join("\n",
                         '#| border-color: <color>{1,4}',
-                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.expr-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
-                        'rule expr-border-color { :i <color> }'),
+                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.val-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
+                        'rule val-border-color { :i <color> }'),
     },
    'property-spec' => {
         input => "'min-width'\t<length> | <percentage> | inherit\t0",
@@ -146,8 +146,8 @@ for (
         rule-refs => ['length', 'percentage'],
         deparse => join("\n",
                         '#| min-width: <length> | <percentage> | inherit',
-                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.expr-min-width> /, &?ROUTINE.WHY)>}',
-                        'rule expr-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
+                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.val-min-width> /, &?ROUTINE.WHY)>}',
+                        'rule val-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
                        ),
     },
     'property-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
@@ -171,8 +171,8 @@ for (
                         rule-refs => [<attr counter identifier string uri>],
                         deparse => join("\n",
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
-                                        'rule decl:sym<content> { :i (content) ":" <val(/<expr=.expr-content> /, &?ROUTINE.WHY)>}',
-                                        'rule expr-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
+                                        'rule decl:sym<content> { :i (content) ":" <val(/<expr=.val-content> /, &?ROUTINE.WHY)>}',
+                                        'rule val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
                                        ),
 
     },
@@ -192,6 +192,7 @@ for (
         my @*PROP-NAMES = [];
 
         my CSS::Specification::Actions $actions .= new;
+        my $*ACTIONS = $actions;
 
         my $parse = CSS::Grammar::Test::parse-tests(
             CSS::Specification, $input,

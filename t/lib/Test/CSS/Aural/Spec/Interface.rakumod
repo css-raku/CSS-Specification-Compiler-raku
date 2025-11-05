@@ -8,9 +8,6 @@ role Test::CSS::Aural::Spec::Interface {
     method frequency ($/) {
         ...
     }
-    method generic-voice ($/) {
-        ...
-    }
     method identifier ($/) {
         ...
     }
@@ -18,9 +15,6 @@ role Test::CSS::Aural::Spec::Interface {
         ...
     }
     method percentage ($/) {
-        ...
-    }
-    method specific-voice ($/) {
         ...
     }
     method string ($/) {
