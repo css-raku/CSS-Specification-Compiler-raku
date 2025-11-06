@@ -97,19 +97,24 @@ multi sub compile(Str :$rule!, :$spec!, Str :$synopsis!) {
 
 multi sub compile(:@occurs! ($quant!, *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    my RakuAST::Regex $separator = compile(:op<,>)
-        if $quant.tail ~~ ',';
-
+    my %opt;
+    %opt<separator> = compile(:op<,>)
+       if $quant.tail ~~ ',';
+    %opt<trailing-separator> = .value
+       with $quant.first: {.isa(Pair) && .key eq 'trailing'};
     my RakuAST::Regex::Quantifier $quantifier = quant($quant);
-    RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, :$separator;
+    RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, |%opt;
 }
 
 multi sub quant('?') { RakuAST::Regex::Quantifier::ZeroOrOne.new }
 multi sub quant('*') { RakuAST::Regex::Quantifier::ZeroOrMore.new }
 multi sub quant('+') { RakuAST::Regex::Quantifier::OneOrMore.new }
 multi sub quant(',') { RakuAST::Regex::Quantifier::OneOrMore.new }
-multi sub quant(Array:D $_ where .elems >= 2) {
-    RakuAST::Regex::Quantifier::Range.new: min => .[0], max => .[1]
+multi sub quant(@ ( UInt:D $min, UInt:D $max, *@) ) {
+    RakuAST::Regex::Quantifier::Range.new: :$min, :$max
+}
+multi sub quant(@ ( Str:D $_, ',', :trailing($)) ) {  # list-maybe
+    .&quant;
 }
 
 sub look-ahead(RakuAST::Regex::Assertion $assertion, Bool :$negated = False) is export {
