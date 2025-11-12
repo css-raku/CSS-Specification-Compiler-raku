@@ -240,8 +240,13 @@ multi sub compile(:@numbers!) {
 sub lit-ws(Str:D() $_) is export { .&lit.&ws }
 
 multi sub compile(Str:D :$op!) {
-    my RakuAST::ArgList $args = $op.&arg;
-    'op'.&assertion(:$args);
+    if $op eq ',' && $*IN-PROTO {
+        $op.&lit;
+    }
+    else {
+        my RakuAST::ArgList $args = $op.&arg;
+        'op'.&assertion(:$args);
+    }
 }
 
 multi sub compile(:@alt!)   { seq-alt @alt.map(&compile).map(&ws) }
@@ -285,6 +290,7 @@ multi sub compile(:%proto! ( :$func!, *%) ) {
 
 multi sub compile(:%func-spec! ( :$func!, :$signature!, :$synopsis!) ) {
 
+    my $*IN-PROTO = True;
     my constant Usage =  RakuAST::Regex::Assertion::Named::Args.new(
         name      => 'usage'.&name,
         args      => RakuAST::ArgList.new(
@@ -303,6 +309,7 @@ multi sub compile($arg) { compile |$arg }
 
 method build-grammar(@grammar-id, Str :$scope = 'our') {
     my $*ACTIONS = $.actions;
+    my $*IN-PROTO = False;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
     my @compiled = flat @.defs.map: &compile;
     my RakuAST::StatementList $statements .= new: |@compiled;
