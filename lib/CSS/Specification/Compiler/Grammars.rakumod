@@ -286,10 +286,11 @@ multi sub compile(:%proto! ( :$func!, *%) ) {
 multi sub compile(:%func-spec! ( :$func!, :$signature!, :$synopsis!) ) {
 
     my constant Usage =  RakuAST::Regex::Assertion::Named::Args.new(
-        name      => 'val'.&name,
+        name      => 'usage'.&name,
         args      => RakuAST::ArgList.new(
             RakuAST::Var::Compiler::Routine.new.&postfix('WHY'.&call),
-        )
+        ),
+        :capturing
     );
     my $args = [$signature.&compile.&ws, Usage].&seq-alt.&ws.&group;
     my $body = ['i'.&modifier,
@@ -303,7 +304,7 @@ multi sub compile($arg) { compile |$arg }
 method build-grammar(@grammar-id, Str :$scope = 'our') {
     my $*ACTIONS = $.actions;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
-    my RakuAST::Statement::Expression @compiled = flat @.defs.map: &compile;
+    my @compiled = flat @.defs.map: &compile;
     my RakuAST::StatementList $statements .= new: |@compiled;
     my RakuAST::Block $body .= new: :body(RakuAST::Blockoid.new: $statements);
 
