@@ -18,7 +18,8 @@ multi method load-defs(:@lines!) is hidden-from-backtrace {
     for @lines -> $prop-spec {
         # handle full line comments
         next if $prop-spec.starts-with('#') || $prop-spec eq '';
-        # '| inherit' and '| initial' are implied anyway; get rid of them
+        # '| inherit' and '| initial' are implied, context dependant, and
+        # inconsistantly specified
         my $spec = $prop-spec.subst(/\s* '|' \s* [inherit|initial]/, '', :g);
 
         my $/ = CSS::Specification.subparse($spec, :$!actions )

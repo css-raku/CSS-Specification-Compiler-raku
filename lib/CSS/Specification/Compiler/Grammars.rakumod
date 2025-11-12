@@ -67,12 +67,12 @@ multi sub compile(:@props!, :$default, Pair :$spec! is copy, Str :$synopsis!, Bo
     my RakuAST::Regex $body = $spec.&compile;
     $body = ('i'.&modifier,  $body.&ws, ).&seq;
     my Str $leading = (@props.head, ': ', $_, "\n").join
-        with $synopsis;
+        given $synopsis;
 
     my RakuAST::Statement::Expression @exprs;
 
     for @props -> $prop {
-        my $base-val = 'val-' ~ $prop;
+        my $base-val = 'prop-val-' ~ $prop;
         @exprs.push: $prop.&property-decl(:$quant, :$base-val).declarator-docs(
             :$leading
         ).&expression;
@@ -87,7 +87,7 @@ multi sub compile(Str :$rule!, :$spec!, Str :$synopsis!) {
     my RakuAST::Regex $body = $spec.&compile;
     $body = ('i'.&modifier,  $body.&ws, ).&seq;
 
-    my Str $leading = $_ ~ "\n" with $synopsis;
+    my Str $leading = $_ ~ "\n" given $synopsis;
     my RakuAST::Name $name = $rule.&name;
 
     $name.&rule($body).declarator-docs(
@@ -253,17 +253,17 @@ multi sub compile(:required(@combo)!) {
 }
 
 multi sub compile(:@combo!, Bool :$required) {
-    my Str $v = 'a';
+    my Str $v = 'A';
     my @atoms = @combo.map: {
         my \id = $v++;
+        my $desigilname = id.&name;
         my RakuAST::VarDeclaration::Simple $decl .= new(
-            :sigil('$'),
-            desigilname => RakuAST::Name.from-identifier(id),
+            :sigil('$*'), :$desigilname,
         );
-        my RakuAST::Regex::Statement $decl-stmt .= new: $decl.&expression;
-        my RakuAST::Regex::Assertion $seen = ('$'~id).&unseen;
+        my RakuAST::Regex::Statement $unseen-var-decl .= new: $decl.&expression;
+        my RakuAST::Regex::Assertion $unseen-assertion = ('$*'~id).&unseen;
         my RakuAST::Regex $term = .&compile;
-        [$term.&ws, $decl-stmt, $seen].&seq;
+        [$term.&ws, $unseen-var-decl, $unseen-assertion].&seq;
     }
     my $atom = @atoms == 1 ?? @atoms.head !! @atoms.&alt.&group;
     my UInt $n = +@combo;
@@ -274,6 +274,29 @@ multi sub compile(:@combo!, Bool :$required) {
     RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier;
 }
 
+multi sub compile(Str:D :func($rule)!, |c) {
+    compile :$rule, |c;
+}
+
+multi sub compile(:%proto! ( :$func!, *%) ) {
+    # nb: prototype has been saved in %.actions.funcs
+    compile :$func;
+}
+
+multi sub compile(:%func-spec! ( :$func!, :$signature!, :$synopsis!) ) {
+
+    my constant Usage =  RakuAST::Regex::Assertion::Named::Args.new(
+        name      => 'val'.&name,
+        args      => RakuAST::ArgList.new(
+            RakuAST::Var::Compiler::Routine.new.&postfix('WHY'.&call),
+        )
+    );
+    my $args = [$signature.&compile.&ws, Usage].&seq-alt.&ws.&group;
+    my $body = ['i'.&modifier,
+                ($func ~ '(').&lit.&ws, $args.&ws, ')'.&lit].&seq.&ws;
+    my Str $leading = $_ ~ "\n" given $synopsis;
+    $func.&name.&rule($body).declarator-docs(:$leading);
+}
 
 multi sub compile($arg) { compile |$arg }
 

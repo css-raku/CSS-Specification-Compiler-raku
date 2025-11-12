@@ -22,10 +22,13 @@ method build-role(@role-id, Str :$scope = 'our') {
 #= generate an interface class for all unresolved terms.
 method !interface-methods {
     my %unresolved = $.actions.rule-refs;
-    %unresolved{'val-' ~ $_}:delete
+    %unresolved ,= $.actions.func-refs;
+    %unresolved{'prop-val-' ~ $_}:delete
         for $.actions.props.keys;
     %unresolved{$_}:delete
         for $.actions.rules.keys;
+    %unresolved{$_}:delete
+        for $.actions.funcs.keys;
 
     my RakuAST::Signature $signature .= new(
         :parameters( '$/'.&param )

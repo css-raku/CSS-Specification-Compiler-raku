@@ -17,84 +17,86 @@ sub tidy($_) {
 lives-ok {require CSS::Grammar:ver(v0.3.0..*) }, "CSS::Grammar version";
 
 for (
-    'spec' => {
+    'values' => {
         input => 'thin',
         ast   => :keywords['thin'],
-        deparse => 'thin & <keyw>',
+        DEPARSE => 'thin & <keyw>',
     },
-    'spec' => {
+    'values' => {
         input => 'thin?',
         ast   => :occurs['?', :keyw<thin>],
-        deparse => '[thin & <keyw>] ?',
+        DEPARSE => '[thin & <keyw>] ?',
     },
-    'spec' => {
+    'values' => {
         input => 'thick | thin',
         ast => :keywords[ 'thick', 'thin' ],
-        deparse => '[thick | thin ]& <keyw>',
+        DEPARSE => '[thick | thin ]& <keyw>',
     },
-    'spec' => {
+    'values' => {
         input => '35 | 7',
         ast => :numbers[ 35, 7 ],
-        deparse => '[35 | 7 ]& <number>',
+        DEPARSE => '[35 | 7 ]& <number>',
     },
-    'spec' => {
+    'values' => {
         input => '35 | 7 | 42?',
         ast => :alt[:numbers[35, 7], :occurs["?", :num(42)]],
-        deparse => '[35 | 7 ]& <number> || [42 & <number>] ?',
+        DEPARSE => '[35 | 7 ]& <number> || [42 & <number>] ?',
     },
-    'spec' => {
+    'values' => {
         input => "<rule-ref>",
         ast => :rule<rule-ref>,
-        deparse => "<rule-ref>",
+        DEPARSE => "<rule-ref>",
         rule-refs => ['rule-ref'],
     },
-    'spec' => {
-        input => "'css21-prop-ref'",
-        ast => :rule<val-css21-prop-ref>,
-        deparse => "<val-css21-prop-ref>",
-        rule-refs => ['val-css21-prop-ref'],
+    'values' => {
+        input => "'css21-prop'",
+        ast => :rule<prop-val-css21-prop>,
+        DEPARSE => "<prop-val-css21-prop>",
+        rule-refs => ['prop-val-css21-prop'],
     },
-    'spec' => {
-        input => "<rule-ref> [ 'css21-prop-ref' <'css3-prop-ref'> ] ?",
-        ast => :seq[:rule<rule-ref>, :occurs["?", :group( :seq[:rule<val-css21-prop-ref>, :rule<val-css3-prop-ref> ]) ] ],
-        deparse => "<rule-ref> [<val-css21-prop-ref> <val-css3-prop-ref> ] ?",
-        rule-refs => ["rule-ref", "val-css21-prop-ref", "val-css3-prop-ref"],
+    'values' => {
+        input => "<rule> [ 'css21-prop' <'css3-prop'> ] ?",
+        ast => :seq[:rule<rule>, :occurs["?", :group( :seq[:rule<prop-val-css21-prop>, :rule<prop-val-css3-prop> ]) ] ],
+        DEPARSE => "<rule> [<prop-val-css21-prop> <prop-val-css3-prop> ] ?",
+        rule-refs => ["prop-val-css21-prop", "prop-val-css3-prop", "rule"],
     },
-    'spec' => {
-        input => "<rule-ref> [, [ 'css21-prop-ref' | <'css3-prop-ref'> ] ]*",
-        ast => :seq[ :rule<rule-ref>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<val-css21-prop-ref>, :rule<val-css3-prop-ref>])])]],
-        deparse => '<rule-ref> [<op(",")> [<val-css21-prop-ref> || <val-css3-prop-ref> ] ] *',
-        rule-refs => ["rule-ref", "val-css21-prop-ref", "val-css3-prop-ref"],
+    'values' => {
+        input => "<rule> [, [ 'css21-prop' | <'css3-prop'> ] ]*",
+        ast => :seq[ :rule<rule>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<prop-val-css21-prop>, :rule<prop-val-css3-prop>])])]],
+        DEPARSE => '<rule> [<op(",")> [<prop-val-css21-prop> || <prop-val-css3-prop> ] ] *',
+        rule-refs => ["prop-val-css21-prop", "prop-val-css3-prop", "rule"],
     },
-    'spec' => {
+    'values' => {
         input => '<length>{4}',
         ast => :occurs[[4,4], :rule<length>],
-        deparse => '<length> ** 4',
+        DEPARSE => '<length> ** 4',
         rule-refs => ['length'],
     },
-    'spec' => {
+    'values' => {
         input => '<length>#',
         ast => :occurs[',', :rule<length>],
-        deparse => '<length> +% <op(",")>',
+        DEPARSE => '<length> +% <op(",")>',
         rule-refs => ['length'],
     },
-    'spec' => {
+    'values' => {
         input => '<length>#{1,4}',
         ast => :occurs[[1, 4, ','], :rule<length>],
-        deparse => '<length> ** 1..4% <op(",")>',
+        DEPARSE => '<length> ** 1..4% <op(",")>',
         rule-refs => ['length'],
     },
-    'spec' => {
+    'values' => {
         input => '[<generic-voice> | <specific-voice> ]#',
         ast => :occurs[",", :group(:alt[:rule("generic-voice"), :rule("specific-voice")])],
-        deparse => '[<generic-voice> || <specific-voice> ] +% <op(",")>',
+        DEPARSE => '[<generic-voice> || <specific-voice> ] +% <op(",")>',
         rule-refs => ['generic-voice', 'specific-voice'],
     },
-    'spec' => {
+    'values' => {
         input => 'attr(<identifier>)',
-        ast => :rule<attr>,
-        deparse => '<attr>',
-        rule-refs => ['attr', 'identifier'],
+        ast => :func<attr>,
+        DEPARSE => '<attr>',
+        func-refs => ['attr'],
+        protos => {:attr{:func<attr>, :signature(:rule<identifier>), :synopsis('attr(<identifier>)')}},
+        rule-refs => ['identifier'],
     },
     'property-spec' => {
         input => "'direction'	ltr | rtl | inherit	ltr	all elements, but see prose	yes",
@@ -107,18 +109,18 @@ for (
         },
     },
 ##    # precedence tests taken from: https://developer.mozilla.org/en-US/docs/CSS/Value_definition_syntax
-    'spec' => {
+    'values' => {
         input => 'bold thin && <length>',
         ast => :required[:seq[:keywords["bold"], :keywords["thin"]], :rule("length")],
         :tidy,
-        deparse => '[bold & <keyw> thin & <keyw> :my $a ; <!{ $a++ }>| <length> :my $b ; <!{ $b++ }>]** 2',
+        DEPARSE => '[bold & <keyw> thin & <keyw> :my $*A ; <!{ $*A++ }>| <length> :my $*B ; <!{ $*B++ }>]** 2',
         rule-refs => ['length'],
     },
-    'spec' => {
+    'values' => {
         input => 'bold || thin && <length>',
         ast => :combo[:keywords["bold"], :required[:keywords["thin"], :rule("length")]],
         :tidy,
-        deparse => '[bold & <keyw> :my $a ; <!{ $a++ }>| [thin & <keyw> :my $a ; <!{ $a++ }>| <length> :my $b ; <!{ $b++ }>]** 2 :my $b ; <!{ $b++ }>]+',
+        DEPARSE => '[bold & <keyw> :my $*A ; <!{ $*A++ }>| [thin & <keyw> :my $*A ; <!{ $*A++ }>| <length> :my $*B ; <!{ $*B++ }>]** 2 :my $*B ; <!{ $*B++ }>]+',
         rule-refs => ['length'],
     },
     'property-spec' => {
@@ -130,10 +132,10 @@ for (
             :spec(:occurs[[1, 4], :rule<color>]),
         },
         rule-refs => ['color'],
-        deparse => join("\n",
+        DEPARSE => join("\n",
                         '#| border-color: <color>{1,4}',
-                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.val-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
-                        'rule val-border-color { :i <color> }'),
+                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.prop-val-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
+                        'rule prop-val-border-color { :i <color> }'),
     },
    'property-spec' => {
         input => "'min-width'\t<length> | <percentage> | inherit\t0",
@@ -144,10 +146,10 @@ for (
             :spec(:alt[:rule("length"), :rule("percentage"), :keywords["inherit"]]),
         },
         rule-refs => ['length', 'percentage'],
-        deparse => join("\n",
+        DEPARSE => join("\n",
                         '#| min-width: <length> | <percentage> | inherit',
-                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.val-min-width> /, &?ROUTINE.WHY)>}',
-                        'rule val-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
+                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.prop-val-min-width> /, &?ROUTINE.WHY)>}',
+                        'rule prop-val-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
                        ),
     },
     'property-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
@@ -158,7 +160,7 @@ for (
                                           {:keywords<normal none>},
                                           {:occurs["+",
                                                    {:group{
-                                                        :alt[{:rule<string>}, {:rule<uri>}, {:rule<counter>}, {:rule<attr>}, {:keywords<open-quote close-quote no-open-quote no-close-quote>}]}
+                                                        :alt[{:rule<string>}, {:rule<uri>}, {:rule<counter>}, {:func<attr>}, {:keywords<open-quote close-quote no-open-quote no-close-quote>}]}
                                                    },
                                                   ]
                                           },
@@ -168,30 +170,36 @@ for (
                              :synopsis('normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit'),
                              :!inherit,
                             },
-                        rule-refs => [<attr counter identifier string uri>],
-                        deparse => join("\n",
+                        rule-refs => [<counter identifier string uri>],
+                        func-refs => ['attr'],
+                        protos => {:attr{:func<attr>, :signature(:rule<identifier>), :synopsis('attr(<identifier>)')}},
+                        DEPARSE => join("\n",
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
-                                        'rule decl:sym<content> { :i (content) ":" <val(/<expr=.val-content> /, &?ROUTINE.WHY)>}',
-                                        'rule val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
+                                        'rule decl:sym<content> { :i (content) ":" <val(/<expr=.prop-val-content> /, &?ROUTINE.WHY)>}',
+                                        'rule prop-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
                                        ),
 
     },
-##    # css1 spec with property name and '*' junk
-##    property-spec => {input => "'width' *\t<length> | <percentage> | auto	auto	all elements but non-replaced inline elements, table rows, and row groups	no",
-##                      ast => Mu,
-##    },
+    # css1 spec with property name and '*' junk
+    property-spec => {input => "'width' *\t<length> | <percentage> | auto	auto	all elements but non-replaced inline elements, table rows, and row groups	no",
+                      ast => {:props["width"], :spec(:alt[:rule("length"), :rule("percentage"), :keywords["auto"]]), :synopsis("<length> | <percentage> | auto"), :default("auto"), :inherit(False), },
+                      rule-refs => ["length", "percentage"],
+    },
     ) {
 
     my $rule := .key;
     my $expected := .value;
     my $input := $expected<input>;
-    my $deparse := $expected<deparse>;
+    my $deparse := $expected<DEPARSE>;
     my $rule-refs := $expected<rule-refs>;
+    my $func-refs := $expected<func-refs>;
+    my $protos    := $expected<protos>;
 
     subtest $input, {
         my @*PROP-NAMES = [];
 
         my CSS::Specification::Actions $actions .= new;
+        my $*VAR = 'a';
         my $*ACTIONS = $actions;
 
         my $parse = CSS::Grammar::Test::parse-tests(
@@ -204,6 +212,7 @@ for (
 
         with $deparse {
             my $AST = RakuAST::StatementList.new: |compile(|$parse.ast);
+
             my $s = $AST.DEPARSE;
             $s .= &tidy if $expected<tidy>;
             is $s.trim, $_, 'deparse';
@@ -212,6 +221,14 @@ for (
         my @refs = $actions.rule-refs.keys.sort.Array;
         if @refs || $rule-refs {
             is-deeply @refs, $rule-refs, "rule-refs";
+        }
+        @refs = $actions.func-refs.keys.sort.Array;
+        if @refs || $func-refs {
+            is-deeply @refs, $func-refs, "func-refs";
+        }
+        my %protos-got = $actions.protos;
+        if $protos || %protos-got {
+            is-deeply %protos-got, $protos, "protos";
         }
     }
 }

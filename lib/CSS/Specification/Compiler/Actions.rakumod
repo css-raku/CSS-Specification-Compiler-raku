@@ -19,6 +19,21 @@ method build-actions(@actions-id, Str :$scope = 'our') {
     );
 }
 
+sub call-make-func(Str $name) {
+    my RakuAST::StrLiteral $lit .= new($name);
+    my RakuAST::QuotedString $qstr .= new: :segments($lit,);
+    RakuAST::Blockoid.new(
+        RakuAST::Var::Attribute::Public.new(
+            :name('$.make-func'),
+            args => RakuAST::ArgList.new(
+                $qstr,
+                RakuAST::Var::Lexical.new("\$/")
+            )
+        ).&expression.&statements
+    );
+
+}
+
 sub build-action(Str $id) {
     RakuAST::Blockoid.new(
         RakuAST::Call::Name::WithoutParentheses.new(
@@ -43,29 +58,34 @@ sub build-action(Str $id) {
 method !actions-methods {
     my RakuAST::Method @methods;
     my %references = $.actions.rule-refs;
+    %references ,= $.actions.func-refs;
 
     my RakuAST::Signature $signature .= new(
         :parameters( '$/'.&param )
     );
 
-    my $val-body = 'list'.&build-action;
+    my $val-body  = 'list'.&build-action;
     my $rule-body = 'rule'.&build-action;
 
     for @.defs -> $def {
-        with $def<props> -> @props {
+        if $def<props> -> @props {
             for @props -> $prop {
-                my $val = 'val-' ~ $prop;
+                my $val = 'prop-val-' ~ $prop;
                 if %references{$val}:delete && !$.actions.rules{$val} {
                     my RakuAST::Name $name = $val.&name;
                     @methods.push: RakuAST::Method.new: :$name, :$signature, body => $val-body;
                 }
             }
         }
-        else {
-            my $rule = $def<rule>;
-            my RakuAST::Name $name = $rule.&name;
+        elsif $def<rule> -> $rule {
+           my RakuAST::Name $name = $rule.&name;
             @methods.push: RakuAST::Method.new: :$name, :$signature, body => $rule-body;
         }
+    }
+
+    for $.actions.funcs.keys.sort {
+        my $name = .&name;
+        @methods.push: RakuAST::Method.new: :$name, :$signature, body => .&call-make-func;
     }
 
     @methods;
