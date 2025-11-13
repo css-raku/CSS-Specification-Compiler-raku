@@ -6,8 +6,8 @@ also does CSS::Specification::Compiler::Actions;
 use CSS::Specification::Compiler::Grammars;
 also does CSS::Specification::Compiler::Grammars;
 
-use CSS::Specification::Compiler::Roles;
-also does CSS::Specification::Compiler::Roles;
+use CSS::Specification::Compiler::External;
+also does CSS::Specification::Compiler::External;
 
 use CSS::Specification;
 use CSS::Specification::Actions;

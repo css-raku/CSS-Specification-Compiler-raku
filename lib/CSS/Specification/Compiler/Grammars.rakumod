@@ -87,7 +87,7 @@ multi sub compile(Str :$rule!, :$spec!, Str :$synopsis!) {
     my RakuAST::Regex $body = $spec.&compile;
     $body = ('i'.&modifier,  $body.&ws, ).&seq;
 
-    my Str $leading = $_ ~ "\n" given $synopsis;
+    my Str $leading = "<%s> = %s\n".sprintf: $rule, $synopsis;
     my RakuAST::Name $name = $rule.&name;
 
     $name.&rule($body).declarator-docs(

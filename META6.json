@@ -16,7 +16,7 @@
     "CSS::Specification::Compiler": "lib/CSS/Specification/Compiler.rakumod",
     "CSS::Specification::Compiler::Util": "lib/CSS/Specification/Compiler/Util.rakumod",
     "CSS::Specification::Compiler::Grammars": "lib/CSS/Specification/Compiler/Grammars.rakumod",
-    "CSS::Specification::Compiler::Roles": "lib/CSS/Specification/Compiler/Roles.rakumod",
+    "CSS::Specification::Compiler::External": "lib/CSS/Specification/Compiler/External.rakumod",
     "CSS::Specification::Compiler::Actions": "lib/CSS/Specification/Compiler/Actions.rakumod"
   },
   "resources": [

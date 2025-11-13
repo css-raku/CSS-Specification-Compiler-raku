@@ -7,7 +7,7 @@ use experimental :rakuast;
 
 my @base-id = qw<Test CSS Aural Spec>;
 my @actions-id = @base-id.Slip, 'Actions';
-my @role-id = @base-id.Slip, 'Interface';
+my @external-id = @base-id.Slip, 'External';
 my @grammar-id = @base-id.Slip, 'Grammar';
 
 my $file = $*SPEC.catfile('examples', 'css21-aural.txt');
@@ -28,10 +28,10 @@ my RakuAST::Package $grammar = $compiler.build-grammar(@grammar-id);
 my RakuAST::Package $actions-pkg = $compiler.build-actions(@actions-id);
 "t/lib/{$actions-pkg.&name('/')}.rakumod".IO.spurt: $actions-pkg.DEPARSE;
 
-my $role-name = @role-id.join: '::';
-my RakuAST::Package $interface-pkg = $compiler.build-role(@role-id);
+my $external-name = @external-id.join: '::';
+my RakuAST::Package $interface-pkg = $compiler.build-external(@external-id);
 "t/lib/{$interface-pkg.&name('/')}.rakumod".IO.spurt: $interface-pkg.DEPARSE;
-lives-ok {require ::($role-name)}, "$role-name compilation";
+lives-ok {require ::($external-name)}, "$external-name compilation";
 
 dies-ok {require ::("Test::CSS::Aural::BadGrammar")}, 'grammar composition, unimplemented interface - dies';
 

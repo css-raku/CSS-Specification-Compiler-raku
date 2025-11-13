@@ -68,9 +68,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     #| voice-family: [<generic-voice> | <specific-voice> ]#
     rule decl:sym<voice-family> {     :i ("voice-family") ":" <val(/<expr=.prop-val-voice-family> /, &?ROUTINE.WHY)>}
     rule prop-val-voice-family { :i [<generic-voice> || <specific-voice> ] +% <op(",")> }
-    #| male | female | child
+    #| <generic-voice> = male | female | child
     rule generic-voice {     :i [male | female | child ]& <keyw>  }
-    #| <identifier> | <string>
+    #| <specific-voice> = <identifier> | <string>
     rule specific-voice {     :i <identifier> || <string>  }
     #| volume: <number> | <percentage> | silent | x-soft | soft | medium | loud | x-loud
     rule decl:sym<volume> {     :i (volume) ":" <val(/<expr=.prop-val-volume> /, &?ROUTINE.WHY)>}

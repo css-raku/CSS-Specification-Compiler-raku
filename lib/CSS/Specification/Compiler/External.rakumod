@@ -1,4 +1,4 @@
-unit role CSS::Specification::Compiler::Roles;
+unit role CSS::Specification::Compiler::External;
 
 use CSS::Specification::Compiler::Util;
 
@@ -6,7 +6,7 @@ use experimental :rakuast;
 
 method actions { ... }
 
-method build-role(@role-id, Str :$scope = 'our') {
+method build-external(@role-id, Str :$scope = 'our') {
     my RakuAST::Method @methods = self!interface-methods;
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
     my RakuAST::Blockoid $body .= new: @expressions.&statements;
@@ -30,8 +30,11 @@ method !interface-methods {
     %unresolved{$_}:delete
         for $.actions.funcs.keys;
 
+    my $parameters = RakuAST::Parameter.new(
+        slurpy => RakuAST::Parameter::Slurpy::Capture
+    );
     my RakuAST::Signature $signature .= new(
-        :parameters( '$/'.&param )
+        :$parameters
     );
 
     my RakuAST::Blockoid $body .= new(

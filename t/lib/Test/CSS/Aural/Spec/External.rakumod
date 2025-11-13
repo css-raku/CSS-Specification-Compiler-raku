@@ -1,0 +1,29 @@
+role Test::CSS::Aural::Spec::External {
+    method angle (|) {
+        ...
+    }
+    method color (|) {
+        ...
+    }
+    method frequency (|) {
+        ...
+    }
+    method identifier (|) {
+        ...
+    }
+    method number (|) {
+        ...
+    }
+    method percentage (|) {
+        ...
+    }
+    method string (|) {
+        ...
+    }
+    method time (|) {
+        ...
+    }
+    method uri (|) {
+        ...
+    }
+}
