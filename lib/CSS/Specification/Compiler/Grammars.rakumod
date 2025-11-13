@@ -258,9 +258,8 @@ multi sub compile(:required(@combo)!) {
 }
 
 multi sub compile(:@combo!, Bool :$required) {
-    my Str $v = 'A';
-    my @atoms = @combo.map: {
-        my \id = $v++;
+     my @atoms = @combo.map: {
+        my \id = $*VAR++;
         my $desigilname = id.&name;
         my RakuAST::VarDeclaration::Simple $decl .= new(
             :sigil('$*'), :$desigilname,
@@ -311,7 +310,7 @@ method build-grammar(@grammar-id, Str :$scope = 'our') {
     my $*ACTIONS = $.actions;
     my $*IN-PROTO = False;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
-    my @compiled = flat @.defs.map: &compile;
+    my @compiled = flat @.defs.map: { my $*VAR = 'A'; .&compile};
     my RakuAST::StatementList $statements .= new: |@compiled;
     my RakuAST::Block $body .= new: :body(RakuAST::Blockoid.new: $statements);
 

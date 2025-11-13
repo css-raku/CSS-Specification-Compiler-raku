@@ -120,7 +120,7 @@ for (
         input => 'bold || thin && <length>',
         ast => :combo[:keywords["bold"], :required[:keywords["thin"], :rule("length")]],
         :tidy,
-        DEPARSE => '[bold & <keyw> :my $*A ; <!{ $*A++ }>| [thin & <keyw> :my $*A ; <!{ $*A++ }>| <length> :my $*B ; <!{ $*B++ }>]** 2 :my $*B ; <!{ $*B++ }>]+',
+        DEPARSE => '[bold & <keyw> :my $*A ; <!{ $*A++ }>| [thin & <keyw> :my $*C ; <!{ $*C++ }>| <length> :my $*D ; <!{ $*D++ }>]** 2 :my $*B ; <!{ $*B++ }>]+',
         rule-refs => ['length'],
     },
     'property-spec' => {
@@ -199,7 +199,7 @@ for (
         my @*PROP-NAMES = [];
 
         my CSS::Specification::Actions $actions .= new;
-        my $*VAR = 'a';
+        my $*VAR = 'A';
         my $*ACTIONS = $actions;
 
         my $parse = CSS::Grammar::Test::parse-tests(
