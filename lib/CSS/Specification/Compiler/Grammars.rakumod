@@ -59,9 +59,11 @@ sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
     );
 }
 
+my subset Boxed of Pair where .key eq 'occurs' && .value.elems == 2 && .value.head ~~ [1,4];
+
 multi sub compile(:@props!, :$default, Pair :$spec! is copy, Str :$synopsis!, Bool :$inherit = True) {
     my $quant;
-    if $spec.key eq 'occurs' && $spec.value.head ~~ [1,4]  {
+    if $spec ~~ Boxed  {
         ($quant, $spec) = $spec.value.List;
     }
     my RakuAST::Regex $body = $spec.&compile;
@@ -95,7 +97,13 @@ multi sub compile(Str :$rule!, :$spec!, Str :$synopsis!) {
     ).&expression.List
 }
 
-multi sub compile(:@occurs! ($quant!, *%term)) {
+multi sub compile(:@occurs! ( @ ['*', ',', :$trailing! where .so], *%term) ) {
+    my RakuAST::Regex $atom = [ (|%term).&compile.&ws, compile(:op<,>).&ws].&seq.&group;
+    my RakuAST::Regex::Quantifier $quantifier = '*'.&quant;
+    RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier;
+}
+
+multi sub compile(:@occurs! ( $quant!, *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
     my %opt;
     %opt<separator> = compile(:op<,>)

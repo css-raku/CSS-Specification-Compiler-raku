@@ -98,6 +98,12 @@ for (
         protos => {:attr{:func<attr>, :signature(:rule<identifier>), :synopsis('attr(<identifier>)')}},
         rule-refs => ['identifier'],
     },
+    'values' => {
+        input => '<a>#? , <b>',
+        ast => :seq[:occurs[["*", ",", :trailing], :rule<a>], :rule<b>],
+        DEPARSE => '[<a> <op(",")> ]* <b>',
+        rule-refs => ['a', 'b'],
+    },
     'property-spec' => {
         input => "'direction'	ltr | rtl | inherit	ltr	all elements, but see prose	yes",
         ast => {
