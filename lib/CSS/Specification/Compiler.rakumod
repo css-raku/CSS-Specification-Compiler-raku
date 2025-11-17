@@ -32,7 +32,7 @@ multi method load-defs(:@lines!) is hidden-from-backtrace {
 }
 
 multi method load-defs(IO:D() :$file!) is hidden-from-backtrace {
-    my @lines = $file.slurp.split(/<!after '\\'>\n/);
+    my @lines = $file.slurp.subst("\\\n", '', :g).lines;
     self.load-defs: :@lines;
 }
 

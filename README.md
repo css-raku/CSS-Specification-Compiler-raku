@@ -22,8 +22,8 @@ mkdir 'lib/MyCSS';
     given $compiler.build-actions: <MyCSS Actions>;
 
 # output stubs for external rule references
-'lib/MyCSS/Externals.rakumod'.IO.spurt: .DEPARSE
-    given $compiler.build-role: <MyCSS Externals>;
+'lib/MyCSS/External.rakumod'.IO.spurt: .DEPARSE
+    given $compiler.build-external: <MyCSS External>;
 
 # output associated metadata
 mkdir 'resources';
