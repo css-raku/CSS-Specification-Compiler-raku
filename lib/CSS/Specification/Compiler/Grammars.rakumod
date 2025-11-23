@@ -170,12 +170,12 @@ sub alt(@choices) is export {
     RakuAST::Regex::Alternation.new: |@choices;
 }
 
+multi sub seq(@seq, :alt($)! where .so) is export  { RakuAST::Regex::SequentialAlternation.new: |@seq }
 multi sub seq(@seq) {
     RakuAST::Regex::Sequence.new(|@seq);
 }
 multi sub seq($seq) { $seq }
 
-multi sub seq-alt(@seq) is export  { RakuAST::Regex::SequentialAlternation.new: |@seq }
 sub conjunct(RakuAST::Regex $r1, RakuAST::Regex $r2) is export {
     RakuAST::Regex::Conjunction.new($r1, $r2);
 }
@@ -257,9 +257,9 @@ multi sub compile(Str:D :$op!) {
     }
 }
 
-multi sub compile(:@alt!)   { seq-alt @alt.map(&compile).map(&ws) }
-multi sub compile(:@seq!)   { seq @seq.map(&compile).map(&ws) }
-multi sub compile(:$group!) { group $group.&compile }
+multi sub compile(:@alt!)   { @alt.map(&compile).map(&ws).&seq(:alt) }
+multi sub compile(:@seq!)   { @seq.map(&compile).map(&ws).&seq }
+multi sub compile(:$group!) { $group.&compile.&group }
 
 multi sub compile(:required(@combo)!) {
     compile(:@combo, :required);
@@ -277,7 +277,7 @@ multi sub compile(:@combo!, Bool :$required) {
         my RakuAST::Regex $term = .&compile;
         [$term.&ws, $unseen-var-decl, $unseen-assertion].&seq;
     }
-    my $atom = @atoms == 1 ?? @atoms.head !! @atoms.&alt.&group;
+    my $atom = @atoms == 1 ?? @atoms.head !! @atoms.&seq(:alt).&group;
     my UInt $n = +@combo;
     my RakuAST::Regex::Quantifier $quantifier = $required
         ?? quant([$n, $n])
@@ -305,7 +305,7 @@ multi sub compile(:%func-spec! ( :$func!, :$signature!, :$synopsis!) ) {
         ),
         :capturing
     );
-    my $args = [$signature.&compile.&ws, Usage].&seq-alt.&ws.&group;
+    my $args = [$signature.&compile.&ws, Usage].&seq(:alt).&ws.&group;
     my $body = ['i'.&modifier,
                 ($func ~ '(').&lit.&ws, $args.&ws, ')'.&lit].&seq.&ws;
     my Str $leading = $_ ~ "\n" given $synopsis;

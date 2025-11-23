@@ -3,7 +3,7 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule decl:sym<azimuth> {     :i (azimuth) ":" <val(/<expr=.prop-val-azimuth> /, &?ROUTINE.WHY)>}
     rule prop-val-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ] :my $*A; <!{
         $*A++
-    }>| behind & <keyw>  :my $*B; <!{
+    }>|| behind & <keyw>  :my $*B; <!{
         $*B++
     }>]+] || [leftwards | rightwards ]& <keyw>   }
     #| cue-after: <uri> | none
@@ -16,7 +16,7 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule decl:sym<cue> {     :i (cue) ":" <val(/<expr=.prop-val-cue> /, &?ROUTINE.WHY)>}
     rule prop-val-cue { :i [[<prop-val-cue-before> :my $*A; <!{
         $*A++
-    }>| <prop-val-cue-after> :my $*B; <!{
+    }>|| <prop-val-cue-after> :my $*B; <!{
         $*B++
     }>]+] }
     #| elevation: <angle> | below | level | above | higher | lower
@@ -41,7 +41,7 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule decl:sym<play-during> {     :i ("play-during") ":" <val(/<expr=.prop-val-play-during> /, &?ROUTINE.WHY)>}
     rule prop-val-play-during { :i <uri> [[mix & <keyw>  :my $*A; <!{
         $*A++
-    }>| repeat & <keyw>  :my $*B; <!{
+    }>|| repeat & <keyw>  :my $*B; <!{
         $*B++
     }>]+] ?  || [auto | none ]& <keyw>   }
     #| richness: <number>

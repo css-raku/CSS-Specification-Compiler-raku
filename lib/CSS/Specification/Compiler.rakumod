@@ -15,13 +15,12 @@ has CSS::Specification::Actions:D $.actions handles<child-props> .= new;
 has Associative @.defs;
 
 multi method load-defs(:@lines!) is hidden-from-backtrace {
-    for @lines -> $prop-spec {
+    for @lines -> $spec is copy {
         # handle full line comments
-        next if $prop-spec.starts-with('#') || $prop-spec eq '';
+        next if $spec.starts-with('#') || $spec eq '';
         # '| inherit' and '| initial' are implied, context dependant, and
         # inconsistantly specified. Treat them as implied.
-        my $spec = $prop-spec.subst(/\s* '|' \s* [inherit|initial]/, '', :g);
-
+        $spec .= subst(/\s* '|' \s* [inherit|initial]/, '', :g);
         my $/ = CSS::Specification.subparse($spec, :$!actions )
             // die "unable to parse: $spec";
         my $ast = $/.ast;
