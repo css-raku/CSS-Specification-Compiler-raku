@@ -47,13 +47,16 @@ method metadata {
 sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
     my %props;
 
-    for @defs .grep(*.<props>).sort(*.<props>[0]) {
-        my $name = .<props>[0];
-        my %details = .<synopsis>:kv;
-        %details<inherit> = .<inherit>.so;
-        %details<default> = $_ with .<default>;
+    for @defs
+        .grep(*.<prop-spec>)
+        .map(*.<prop-spec>)
+        .sort(*.<props>[0])
+         -> %spec (:@props!, :$synopsis!, Bool:D :$inherit = False, :$default, *%) {
+        my $name = @props.head;
+        my %details = :$synopsis, :$inherit;
+        %details<default> = $_ with $default;
 
-        for .<props>.flat -> $prop-name {
+        for @props.flat -> $prop-name {
             %props{$prop-name} = %details;
         }
     }

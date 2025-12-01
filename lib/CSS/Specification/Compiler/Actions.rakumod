@@ -68,17 +68,8 @@ method !actions-methods {
     my $rule-body = 'rule'.&build-action;
 
     for @.defs -> $def {
-        if $def<props> -> @props {
-            for @props -> $prop {
-                my $val = 'prop-val-' ~ $prop;
-                if %references{$val}:delete && !$.actions.rules{$val} {
-                    my RakuAST::Name $name = $val.&name;
-                    @methods.push: RakuAST::Method.new: :$name, :$signature, body => $val-body;
-                }
-            }
-        }
-        elsif $def<rule> -> $rule {
-           my RakuAST::Name $name = $rule.&name;
+        if $def<rule-spec> -> % (:$rule!, *%) {
+            my RakuAST::Name $name = $rule.&name;
             @methods.push: RakuAST::Method.new: :$name, :$signature, body => $rule-body;
         }
     }

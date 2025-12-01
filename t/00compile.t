@@ -19,7 +19,7 @@ lives-ok {require CSS::Grammar:ver(v0.3.0..*) }, "CSS::Grammar version";
 for (
     'values' => {
         input => 'thin',
-        ast   => :keywords['thin'],
+        ast   => :keyw<thin>,
         DEPARSE => 'thin & <keyw>',
     },
     'values' => {
@@ -50,21 +50,21 @@ for (
     },
     'values' => {
         input => "'css21-prop'",
-        ast => :rule<prop-val-css21-prop>,
-        DEPARSE => "<prop-val-css21-prop>",
-        rule-refs => ['prop-val-css21-prop'],
+        ast => :rule<css-val-css21-prop>,
+        DEPARSE => "<css-val-css21-prop>",
+        rule-refs => ['css-val-css21-prop'],
     },
     'values' => {
         input => "<rule> [ 'css21-prop' <'css3-prop'> ] ?",
-        ast => :seq[:rule<rule>, :occurs["?", :group( :seq[:rule<prop-val-css21-prop>, :rule<prop-val-css3-prop> ]) ] ],
-        DEPARSE => "<rule> [<prop-val-css21-prop> <prop-val-css3-prop> ] ?",
-        rule-refs => ["prop-val-css21-prop", "prop-val-css3-prop", "rule"],
+        ast => :seq[:rule<rule>, :occurs["?", :group( :seq[:rule<css-val-css21-prop>, :rule<css-val-css3-prop> ]) ] ],
+        DEPARSE => "<rule> [<css-val-css21-prop> <css-val-css3-prop> ] ?",
+        rule-refs => ["css-val-css21-prop", "css-val-css3-prop", "rule"],
     },
     'values' => {
         input => "<rule> [, [ 'css21-prop' | <'css3-prop'> ] ]*",
-        ast => :seq[ :rule<rule>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<prop-val-css21-prop>, :rule<prop-val-css3-prop>])])]],
-        DEPARSE => '<rule> [<op(",")> [<prop-val-css21-prop> || <prop-val-css3-prop> ] ] *',
-        rule-refs => ["prop-val-css21-prop", "prop-val-css3-prop", "rule"],
+        ast => :seq[ :rule<rule>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<css-val-css21-prop>, :rule<css-val-css3-prop>])])]],
+        DEPARSE => '<rule> [<op(",")> [<css-val-css21-prop> || <css-val-css3-prop> ] ] *',
+        rule-refs => ["css-val-css21-prop", "css-val-css3-prop", "rule"],
     },
     'values' => {
         input => '<length>{4}',
@@ -95,7 +95,7 @@ for (
         ast => :func<attr>,
         DEPARSE => '<attr>',
         func-refs => ['attr'],
-        protos => {:attr{:func<attr>, :signature(:rule<identifier>), :synopsis('attr(<identifier>)')}},
+        protos => {:attr{:func<attr>, :signature{ :args[:rule<identifier>] }, :synopsis('attr(<identifier>)')}},
         rule-refs => ['identifier'],
     },
     'values' => {
@@ -104,9 +104,16 @@ for (
         DEPARSE => '[<a> <op(",")> ]* <b>',
         rule-refs => ['a', 'b'],
     },
-    'property-spec' => {
+    'values' => {
+        input => 'example( first? , second? , third? )',
+        ast => :func<example>,
+        protos => {:example{:func<example>, :signature{ :args[ :optional[ :keyw<first>,  :keyw<second>, :keyw<third>]]}, :synopsis("example( first? , second? , third? )")}},
+        DEPARSE => '<example>',
+        func-refs => ["example"],
+    },
+    'prop-spec' => {
         input => "'direction'	ltr | rtl | inherit	ltr	all elements, but see prose	yes",
-        ast => {
+        ast => :prop-spec{
             :props['direction'],
             :default<ltr>,
             :spec(:keywords["ltr", "rtl", "inherit"]),
@@ -114,24 +121,46 @@ for (
             :inherit
         },
     },
+    'func-spec' => {
+        # structured
+        input => '<example()> = example(a, b, c?, d?)',
+        ast => :func-spec{:func<example>, :signature{:args[:keyw<a>, :keyw<b>, :optional[:keyw<c>, :keyw<d>]]}, :synopsis("example(a, b, c?, d?)")},
+        protos => {:example{:func<example>, :signature{:args[:keyw<a>, :keyw<b>, :optional[:keyw<c>, :keyw<d>]]}, :synopsis("example(a, b, c?, d?)")}},
+        DEPARSE => join(
+            "\n",
+            '#| example(a, b, c?, d?)',
+            'rule example { :i "example(" [a & <keyw> "," b & <keyw> ["," c & <keyw> ]? ["," d & <keyw> ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
+        ),
+    },
+    'func-spec' => {
+        # unstructured
+        input => '<rect()> = rect([<length> | auto]#{4,4})',
+        ast => :func-spec{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")},
+        protos => {:rect{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")}},
+        DEPARSE => join("\n",
+                        '#| rect([<length> | auto]#{4,4})',
+                        'rule rect { :i "rect(" [[<length> || auto & <keyw> ] ** 4% "," || <usage(&?ROUTINE.WHY)> ] ")" }',
+                       ),
+        rule-refs => ["length"],
+    },
 ##    # precedence tests taken from: https://developer.mozilla.org/en-US/docs/CSS/Value_definition_syntax
     'values' => {
         input => 'bold thin && <length>',
-        ast => :required[:seq[:keywords["bold"], :keywords["thin"]], :rule("length")],
+        ast => :required[:seq[:keyw<bold>, :keyw<thin>], :rule("length")],
         :tidy,
         DEPARSE => '[bold & <keyw> thin & <keyw> :my $*A ; <!{ $*A++ }>|| <length> :my $*B ; <!{ $*B++ }>]** 2',
         rule-refs => ['length'],
     },
     'values' => {
         input => 'bold || thin && <length>',
-        ast => :combo[:keywords["bold"], :required[:keywords["thin"], :rule("length")]],
+        ast => :combo[:keyw<bold>, :required[:keyw<thin>, :rule("length")]],
         :tidy,
         DEPARSE => '[bold & <keyw> :my $*A ; <!{ $*A++ }>|| [thin & <keyw> :my $*C ; <!{ $*C++ }>|| <length> :my $*D ; <!{ $*D++ }>]** 2 :my $*B ; <!{ $*B++ }>]+',
         rule-refs => ['length'],
     },
-    'property-spec' => {
+    'prop-spec' => {
         input => join("\t", 'border-color','<color>{1,4}', 'transparent'),
-        ast => {
+        ast => :prop-spec{
             :props['border-color'],
             :default<transparent>,
             :synopsis('<color>{1,4}'),
@@ -140,26 +169,26 @@ for (
         rule-refs => ['color'],
         DEPARSE => join("\n",
                         '#| border-color: <color>{1,4}',
-                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<expr=.prop-val-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
-                        'rule prop-val-border-color { :i <color> }'),
+                        'rule decl:sym<border-color> { :i ("border-color") ":" <val(/<css-val-border-color>** 1..4 /, &?ROUTINE.WHY)>}',
+                        'rule css-val-border-color { :i <color> }'),
     },
-   'property-spec' => {
+   'prop-spec' => {
         input => "'min-width'\t<length> | <percentage> | inherit\t0",
-        ast => {
+        ast => :prop-spec{
             :props['min-width'],
             :default<0>,
             :synopsis("<length> | <percentage> | inherit"),
-            :spec(:alt[:rule("length"), :rule("percentage"), :keywords["inherit"]]),
+            :spec(:alt[:rule("length"), :rule("percentage"), :keyw<inherit>]),
         },
         rule-refs => ['length', 'percentage'],
         DEPARSE => join("\n",
                         '#| min-width: <length> | <percentage> | inherit',
-                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<expr=.prop-val-min-width> /, &?ROUTINE.WHY)>}',
-                        'rule prop-val-min-width { :i <length> || <percentage> || inherit & <keyw>   }',
+                        'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<css-val-min-width> /, &?ROUTINE.WHY)>}',
+                        'rule css-val-min-width { :i <length> || <percentage> || inherit & <keyw>  }',
                        ),
     },
-    'property-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
-                        :ast{:props['content'],
+    'prop-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
+                        :ast(:prop-spec{:props['content'],
                              :default<normal>,
                              :spec{
                                  :alt[
@@ -170,25 +199,25 @@ for (
                                                    },
                                                   ]
                                           },
-                                          {:keywords["inherit"]},
+                                          {:keyw<inherit>},
                                       ]
                              },
                              :synopsis('normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit'),
                              :!inherit,
-                            },
+                            }),
                         rule-refs => [<counter identifier string uri>],
                         func-refs => ['attr'],
-                        protos => {:attr{:func<attr>, :signature(:rule<identifier>), :synopsis('attr(<identifier>)')}},
+                        protos => {:attr{:func<attr>, :signature{ :args[:rule<identifier>] }, :synopsis('attr(<identifier>)')}},
                         DEPARSE => join("\n",
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
-                                        'rule decl:sym<content> { :i (content) ":" <val(/<expr=.prop-val-content> /, &?ROUTINE.WHY)>}',
-                                        'rule prop-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>   }',
+                                        'rule decl:sym<content> { :i (content) ":" <val(/<css-val-content> /, &?ROUTINE.WHY)>}',
+                                        'rule css-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>  }',
                                        ),
 
     },
     # css1 spec with property name and '*' junk
-    property-spec => {input => "'width' *\t<length> | <percentage> | auto	auto	all elements but non-replaced inline elements, table rows, and row groups	no",
-                      ast => {:props["width"], :spec(:alt[:rule("length"), :rule("percentage"), :keywords["auto"]]), :synopsis("<length> | <percentage> | auto"), :default("auto"), :inherit(False), },
+    prop-spec => {input => "'width' *\t<length> | <percentage> | auto	auto	all elements but non-replaced inline elements, table rows, and row groups	no",
+                      ast => :prop-spec{:props["width"], :spec(:alt[:rule("length"), :rule("percentage"), :keyw<auto>]), :synopsis("<length> | <percentage> | auto"), :default("auto"), :inherit(False), },
                       rule-refs => ["length", "percentage"],
     },
     ) {
@@ -218,7 +247,6 @@ for (
 
         with $deparse {
             my $AST = RakuAST::StatementList.new: |compile(|$parse.ast);
-
             my $s = $AST.DEPARSE;
             $s .= &tidy if $expected<tidy>;
             is $s.trim, $_, 'deparse';
