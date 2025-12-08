@@ -17,11 +17,11 @@ mkdir 'lib/MyCSS';
 'lib/MyCSS/Grammar.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-grammar: <MyCSS Grammar>;
 
-# output grammar actions
+# output a corresponding grammar parse actions class
 'lib/MyCSS/Actions.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-actions: <MyCSS Actions>;
 
-# output stubs for external rule references
+# output stubs for any external rule references
 'lib/MyCSS/External.rakumod'.IO.spurt: .DEPARSE
     given $compiler.build-external: <MyCSS External>;
 
@@ -33,13 +33,15 @@ mkdir 'resources';
 Description
 -----------
 This module is used to compile [CSS property definitions](https://www.w3.org/TR/css-values-3/)
-to Raku Grammars, Actions and Roles, and to extract meta-data.
+to Raku Grammars and Actions and Roles, and to extract meta-data.
 
 [CSS::Module](https://raku.land/zef:dwarring/CSS::Module), or similar, can then be used to bundle
 the definitions for use by [CSS::Properties](https://raku.land/zef:dwarring/CSS::Properties) and
-other CSS related modules.
+other downstream CSS related modules.
 
 Status
 ------
-This module is experimental, internal and subject to change. It uses the experimental RakuAST API, the
-current version is known to build against Rakudo v2025.10.
+This module may be subject to change. It uses RakuAST API, which is classed as experimental.
+The current version is known to build against Rakudo v2025.10 and v2025.11.
+
+It has been used to compile property value definitions for recent CSS::Module releases. 

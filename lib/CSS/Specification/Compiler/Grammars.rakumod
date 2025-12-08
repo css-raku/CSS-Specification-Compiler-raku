@@ -313,6 +313,10 @@ multi sub compile(:%signature! ( :@args! is copy ) ) {
 }
 multi sub compile(:%signature!) { compile |%signature }
 
+multi sub compile(:paren(@seq)!) {
+    [(:op<(>).&compile.&ws, (:@seq).&compile, (:op<)>).&compile.&ws].&seq;
+}
+
 multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
 
     my $*IN-PROTO = True;

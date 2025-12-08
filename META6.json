@@ -6,7 +6,7 @@
   "build-depends": [
   ],
   "depends": [
-    "CSS::Specification:ver<0.5.0+>"
+    "CSS::Specification:ver<0.5.2+>"
   ],
     "description": "RakuAST based compiler for CSS Specification mini-syntax (experimental)",
   "license": "Artistic-2.0",
