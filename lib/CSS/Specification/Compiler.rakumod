@@ -14,8 +14,8 @@ use CSS::Specification::Actions;
 has CSS::Specification::Actions:D $.actions handles<child-props> .= new;
 has Associative @.defs;
 
-multi method load-defs(:@lines!) is hidden-from-backtrace {
-    for @lines -> $spec is copy {
+multi method load-defs(:@specs!) is hidden-from-backtrace {
+    for @specs -> $spec is copy {
         # handle full line comments
         next if $spec.starts-with('#') || $spec eq '';
         # '| inherit' and '| initial' are implied, context dependant, and
@@ -31,17 +31,18 @@ multi method load-defs(:@lines!) is hidden-from-backtrace {
 }
 
 multi method load-defs(IO:D() :$file!) is hidden-from-backtrace {
-    my @lines = $file.slurp.subst("\\\n", '', :g).lines;
-    self.load-defs: :@lines;
+    my @specs = $file.slurp.subst("\\\n", '', :g).lines;
+    self.load-defs: :@specs;
 }
 
 multi method load-defs() is hidden-from-backtrace {
-    my @lines = $*IN.lines;
-    self.load-defs: :@lines;
+    my @specs = $*IN.lines;
+    self.load-defs: :@specs;
 }
 
+has Hash $!metadata;
 method metadata {
-    @!defs.&build-metadata: :%.child-props;
+    $!metadata //= @!defs.&build-metadata: :%.child-props;
 }
 
 sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
