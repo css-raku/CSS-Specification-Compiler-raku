@@ -8,6 +8,9 @@
       "Test::CSS::Aural::Grammar": "lib/Test/CSS/Aural/Grammar.rakumod",
       "Test::CSS::Aural::Spec::Actions": "lib/Test/CSS/Aural/Spec/Actions.rakumod",
       "Test::CSS::Aural::Spec::Grammar": "lib/Test/CSS/Aural/Spec/Grammar.rakumod",
+      "Test::CSS::Aural::Spec::External": "lib/Test/CSS/Aural/Spec/External.rakumod",
+      "Test::CSS::Aural::Spec::ActionsRole": "lib/Test/CSS/Aural/Spec/ActionsRole.rakumod",
+      "Test::CSS::Aural::Spec::GrammarRole": "lib/Test/CSS/Aural/Spec/GrammarRole.rakumod",
       "Test::CSS::Aural::Spec::External": "lib/Test/CSS/Aural/Spec/External.rakumod"
   },
   "source-url": "git://github.com/p6-css/CSS-Specification-p6.git",

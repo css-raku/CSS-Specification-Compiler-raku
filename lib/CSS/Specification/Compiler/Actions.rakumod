@@ -7,16 +7,14 @@ use experimental :rakuast;
 method actions { ... }
 method defs { ... }
 
-method build-actions(@actions-id, Str :$scope = 'our') {
+method build-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
     my RakuAST::Method @methods = self!actions-methods;
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
     my RakuAST::Blockoid $body .= new: @expressions.&statements;
     my RakuAST::Name $name .= from-identifier-parts(|@actions-id);
-    RakuAST::Class.new(
-        :$name,
-        :$body,
-        :$scope,
-    );
+    $role
+        ?? RakuAST::Role.new( :$name, :body(RakuAST::RoleBody.new: :$body), :$scope)
+        !! RakuAST::Class.new(:$name, :$body, :$scope );
 }
 
 sub call-make-func(Str $name) {

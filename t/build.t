@@ -21,16 +21,26 @@ sub name(RakuAST::Package $p, $j) {
 
 is +$compiler.defs, 24, 'number of summary items';
 
-my RakuAST::Package $grammar = $compiler.build-grammar(@grammar-id);
-"t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE
-.subst(/";\n;"/, ';', :g); # work-around for https://github.com/rakudo/rakudo/issues/5991
+for (True, False) -> $role {
+    subtest ($role ?? 'with roles' !! 'without roles'), {
+        temp @grammar-id.tail ~= 'Role' if $role;
+        my RakuAST::Package $grammar = $compiler.build-grammar(@grammar-id, :$role);
+        "t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE
+        .subst(/";\n;"/, ';', :g); # work-around for https://github.com/rakudo/rakudo/issues/5991
+        my $grammar-name = @grammar-id.join: '::';
+        lives-ok {require ::($grammar-name)}, "$grammar-name compilation";
 
-my RakuAST::Package $actions-pkg = $compiler.build-actions(@actions-id);
-"t/lib/{$actions-pkg.&name('/')}.rakumod".IO.spurt: $actions-pkg.DEPARSE;
+        temp @actions-id.tail ~= 'Role' if $role;
+        my RakuAST::Package $actions-pkg = $compiler.build-actions(@actions-id, :$role);
+        "t/lib/{$actions-pkg.&name('/')}.rakumod".IO.spurt: $actions-pkg.DEPARSE;
+        my $actions-name = @actions-id.join: '::';
+        lives-ok {require ::($actions-name)}, "$actions-name compilation";
 
-my $external-name = @external-id.join: '::';
+    }
+}
 my RakuAST::Package $interface-pkg = $compiler.build-external(@external-id);
 "t/lib/{$interface-pkg.&name('/')}.rakumod".IO.spurt: $interface-pkg.DEPARSE;
+my $external-name = @external-id.join: '::';
 lives-ok {require ::($external-name)}, "$external-name compilation";
 
 dies-ok {require ::("Test::CSS::Aural::BadGrammar")}, 'grammar composition, unimplemented interface - dies';

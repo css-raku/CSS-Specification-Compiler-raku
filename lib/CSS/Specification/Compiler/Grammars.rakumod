@@ -336,17 +336,29 @@ multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
 
 multi sub compile($arg) { compile |$arg }
 
-method build-grammar(@grammar-id, Str :$scope = 'our') {
+method build-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
     my $*ACTIONS = $.actions;
     my $*IN-PROTO = False;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
     my @compiled = flat @.defs.map: { my $*VAR = 'A'; .&compile};
     my RakuAST::StatementList $statements .= new: |@compiled;
-    my RakuAST::Block $body .= new: :body(RakuAST::Blockoid.new: $statements);
 
-    RakuAST::Grammar.new(
-        :$name,
-        :$body,
-        :$scope,
-    );
+    if $role {
+        my RakuAST::Blockoid $block .= new: $statements;
+        my RakuAST::RoleBody $body  .= new: :body($block);
+        RakuAST::Role.new(
+            :$name,
+            :$body,
+            :$scope,
+        );
+    }
+    else {
+        my RakuAST::Block $body .= new: :body(RakuAST::Blockoid.new: $statements);
+
+        RakuAST::Grammar.new(
+            :$name,
+            :$body,
+            :$scope,
+        );
+    }
 }
