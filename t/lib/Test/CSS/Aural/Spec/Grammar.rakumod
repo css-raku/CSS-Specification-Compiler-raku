@@ -1,9 +1,9 @@
 grammar Test::CSS::Aural::Spec::Grammar {
     #| azimuth: <angle> | [[ left-side | far-left | left | center-left | center | center-right | right | far-right | right-side ] || behind ] | leftwards | rightwards
     rule decl:sym<azimuth> {     :i (azimuth) ":" <val(/<css-val-azimuth> /, &?ROUTINE.WHY)>}
-    rule css-val-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ] :my $*A; <!{
+    rule css-val-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ] :my $*A;<!{
         $*A++
-    }>|| behind & <keyw> :my $*B; <!{
+    }>|| behind & <keyw> :my $*B;<!{
         $*B++
     }>]+] || [leftwards | rightwards ]& <keyw>   }
     #| cue-after: <uri> | none
@@ -14,9 +14,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule css-val-cue-before { :i <uri> || none & <keyw>  }
     #| cue: [ 'cue-before' || 'cue-after' ]
     rule decl:sym<cue> {     :i (cue) ":" <val(/<css-val-cue> /, &?ROUTINE.WHY)>}
-    rule css-val-cue { :i [[<css-val-cue-before> :my $*A; <!{
+    rule css-val-cue { :i [[<css-val-cue-before> :my $*A;<!{
         $*A++
-    }>|| <css-val-cue-after> :my $*B; <!{
+    }>|| <css-val-cue-after> :my $*B;<!{
         $*B++
     }>]+] }
     #| elevation: <angle> | below | level | above | higher | lower
@@ -39,9 +39,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule css-val-pitch { :i <frequency> || ["x-low" | low | medium | high | "x-high" ]& <keyw>   }
     #| play-during: <uri> [ mix || repeat ]? | auto | none
     rule decl:sym<play-during> {     :i ("play-during") ":" <val(/<css-val-play-during> /, &?ROUTINE.WHY)>}
-    rule css-val-play-during { :i <uri> [[mix & <keyw> :my $*A; <!{
+    rule css-val-play-during { :i <uri> [[mix & <keyw> :my $*A;<!{
         $*A++
-    }>|| repeat & <keyw> :my $*B; <!{
+    }>|| repeat & <keyw> :my $*B;<!{
         $*B++
     }>]+] ?  || [auto | none ]& <keyw>   }
     #| richness: <number>
