@@ -2,6 +2,7 @@ use Test;
 use CSS::Grammar::Test;
 use CSS::Grammar::CSS21;
 use CSS::Specification::Compiler;
+use JSON::Fast;
 use lib 't';
 use experimental :rakuast;
 
@@ -38,8 +39,13 @@ for (True, False) -> $role {
 
     }
 }
+
 my RakuAST::Package $interface-pkg = $compiler.build-external(@external-id);
 "t/lib/{$interface-pkg.&name('/')}.rakumod".IO.spurt: $interface-pkg.DEPARSE;
+
+# todo: metadata tests
+('t', 'lib', @base-id.Slip, "Metadata.rakumod").join('/').IO.spurt: $compiler.metadata.&to-json(:sorted-keys);
+
 my $external-name = @external-id.join: '::';
 lives-ok {require ::($external-name)}, "$external-name compilation";
 
