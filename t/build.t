@@ -10,7 +10,7 @@ my @actions-id = @base-id.Slip, 'Actions';
 my @external-id = @base-id.Slip, 'External';
 my @grammar-id = @base-id.Slip, 'Grammar';
 
-my $file = $*SPEC.catfile('examples', 'css21-aural.txt');
+my $file = $*SPEC.catfile('examples', 'css21-aural.tsv');
 
 my CSS::Specification::Compiler $compiler .= new;
 $compiler.load-defs(:$file);

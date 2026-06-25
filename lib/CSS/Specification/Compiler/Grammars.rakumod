@@ -218,7 +218,7 @@ multi sub compile(Str:D() :$num!) {
     conjunct $num.&lit-ws, 'number'.&assertion;
 }
 
-sub _choice(@lits, RakuAST::Regex $term2) {
+sub choice(@lits, RakuAST::Regex $term2) {
     my RakuAST::Regex $term1 = @lits == 1 ?? @lits[0] !! @lits.&alt.&group;
     conjunct($term1, $term2);
 }
@@ -228,11 +228,11 @@ multi sub compile(Str:D :$rule!) {
 }
 
 multi sub compile(:@keywords!) {
-    _choice @keywords.map(&lit-ws), 'keyw'.&assertion.&ws;
+    choice @keywords.map(&lit-ws), 'keyw'.&assertion.&ws;
 }
 
 multi sub compile(:@numbers!) {
-    _choice @numbers.map(&lit-ws), 'number'.&assertion;
+    choice @numbers.map(&lit-ws), 'number'.&assertion;
 }
 
 sub lit-ws(Str:D() $_) is export { .&lit.&ws }

@@ -8,7 +8,7 @@ Synopsis
 use CSS::Specification::Compiler;
 my CSS::Specification::Compiler $compiler .= new;
 use JSON::Fast;
-$compiler.load-defs: :file<examples/css21-aural.txt>;
+$compiler.load-defs: :file<examples/css21-aural.tsv>;
 
 # output Raku code
 mkdir 'lib/MyCSS';
@@ -27,13 +27,13 @@ mkdir 'lib/MyCSS';
 
 # output associated metadata
 mkdir 'resources';
-'resources/MyCSSMeta.json'.IO.spurt: to-json($compiler.metadata, :sorted-keys);
+'resources/MyCSSMeta.json'.IO.spurt: $compiler.metadata.&to-json(:sorted-keys);
 ```
 
 Description
 -----------
-This module is used to compile [CSS property definitions](https://www.w3.org/TR/css-values-3/)
-to Raku Grammars and Actions and Roles, and to extract meta-data.
+This module is used to compile sets of [CSS property definitions](https://www.w3.org/TR/css-values-3/)
+to Raku Grammars, Actions, External references, and to extract Metadata.
 
 [CSS::Module](https://raku.land/zef:dwarring/CSS::Module), or similar, can then be used to bundle
 the definitions for use by [CSS::Properties](https://raku.land/zef:dwarring/CSS::Properties) and
@@ -42,6 +42,6 @@ other downstream CSS related modules.
 Status
 ------
 This module may be subject to change. It uses RakuAST API, which is classed as experimental.
-The current version is known to build against Rakudo v2025.10 and v2025.11.
+The current version was most recently tested against Rakudo 2026.05
 
 It has been used to compile property value definitions for recent CSS::Module releases. 
