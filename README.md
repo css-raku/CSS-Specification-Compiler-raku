@@ -44,4 +44,4 @@ Status
 This module may be subject to change. It uses RakuAST API, which is classed as experimental.
 The current version was most recently tested against Rakudo 2026.05
 
-It has been used to compile property value definitions for recent CSS::Module releases. 
+It has been used to transpile property value definitions to Raku for recent CSS::Module releases.
