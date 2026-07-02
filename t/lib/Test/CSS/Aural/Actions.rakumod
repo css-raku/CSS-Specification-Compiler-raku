@@ -7,8 +7,7 @@ use CSS::Grammar::Actions;
 class Test::CSS::Aural::Actions
     is Test::CSS::Aural::Spec::Actions
     is CSS::Specification::Base::Actions
-    is CSS::Grammar::Actions
-    does Test::CSS::Aural::Spec::External {
+    is CSS::Grammar::Actions {
 
     method proforma:sym<inherit>($/) { make {'keyw' => ~$<sym>} }
 }

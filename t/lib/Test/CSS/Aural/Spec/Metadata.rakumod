@@ -63,6 +63,7 @@
     "synopsis": "<angle> | below | level | above | higher | lower"
   },
   "pause": {
+    "default": "see individual properties",
     "inherit": false,
     "synopsis": "[ [<time> | <percentage>]{1,2} ]"
   },

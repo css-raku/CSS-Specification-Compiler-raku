@@ -25,14 +25,14 @@ is +$compiler.defs, 24, 'number of summary items';
 for (True, False) -> $role {
     subtest ($role ?? 'with roles' !! 'without roles'), {
         temp @grammar-id.tail ~= 'Role' if $role;
-        my RakuAST::Package $grammar = $compiler.build-grammar(@grammar-id, :$role);
+        my RakuAST::Package $grammar = $compiler.compile-grammar(@grammar-id, :$role);
         "t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE
         .subst(/";\n;"/, ';', :g); # work-around for https://github.com/rakudo/rakudo/issues/5991
         my $grammar-name = @grammar-id.join: '::';
         lives-ok {require ::($grammar-name)}, "$grammar-name compilation";
 
         temp @actions-id.tail ~= 'Role' if $role;
-        my RakuAST::Package $actions-pkg = $compiler.build-actions(@actions-id, :$role);
+        my RakuAST::Package $actions-pkg = $compiler.compile-actions(@actions-id, :$role);
         "t/lib/{$actions-pkg.&name('/')}.rakumod".IO.spurt: $actions-pkg.DEPARSE;
         my $actions-name = @actions-id.join: '::';
         lives-ok {require ::($actions-name)}, "$actions-name compilation";
@@ -40,7 +40,7 @@ for (True, False) -> $role {
     }
 }
 
-my RakuAST::Package $interface-pkg = $compiler.build-external(@external-id);
+my RakuAST::Package $interface-pkg = $compiler.compile-external(@external-id);
 "t/lib/{$interface-pkg.&name('/')}.rakumod".IO.spurt: $interface-pkg.DEPARSE;
 
 # todo: metadata tests

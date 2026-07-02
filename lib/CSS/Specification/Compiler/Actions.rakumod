@@ -7,7 +7,7 @@ use experimental :rakuast;
 method actions { ... }
 method defs { ... }
 
-method build-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
+method compile-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
     my RakuAST::Method @methods = self!actions-methods;
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
     my RakuAST::Blockoid $body .= new: @expressions.&statements;
@@ -15,6 +15,19 @@ method build-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
     $role
         ?? RakuAST::Role.new( :$name, :body(RakuAST::RoleBody.new: :$body), :$scope)
         !! RakuAST::Class.new(:$name, :$body, :$scope );
+}
+
+method link-actions(@group-id, @modules, Str :$scope = 'our') {
+    my RakuAST::Name @module-names = @modules.map: -> @module-ids {
+        RakuAST::Name.from-identifier-parts: |@module-ids;
+    }
+    my RakuAST::Statement @used = @module-names.map: -> $module-name { RakuAST::Statement::Use.new: :$module-name }
+    my RakuAST::Trait::Is @traits =  @module-names.map: -> $name {
+        RakuAST::Trait::Is.new: :$name;
+    }
+    my RakuAST::Name $name .= from-identifier-parts(|@group-id);
+    my RakuAST::Blockoid $body .= new: @used.&statements;
+    RakuAST::Class.new(:$name, :$scope, :$body, :@traits );
 }
 
 sub call-make-func(Str $name) {
@@ -32,7 +45,7 @@ sub call-make-func(Str $name) {
 
 }
 
-sub build-action(Str $id) {
+sub compile-action(Str $id) {
     RakuAST::Blockoid.new(
         RakuAST::Call::Name::WithoutParentheses.new(
             name => RakuAST::Name.from-identifier("make"),
@@ -55,15 +68,13 @@ sub build-action(Str $id) {
 
 method !actions-methods {
     my RakuAST::Method @methods;
-    my %references = $.actions.rule-refs;
-    %references ,= $.actions.func-refs;
 
     my RakuAST::Signature $signature .= new(
         :parameters( '$/'.&param )
     );
 
-    my $val-body  = 'list'.&build-action;
-    my $rule-body = 'rule'.&build-action;
+    my $val-body  = 'list'.&compile-action;
+    my $rule-body = 'rule'.&compile-action;
 
     for @.defs -> $def {
         if $def<rule-spec> -> % (:$rule!, *%) {

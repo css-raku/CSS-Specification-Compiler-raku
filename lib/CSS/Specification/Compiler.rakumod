@@ -30,7 +30,7 @@ multi method load-defs(:@specs!) is hidden-from-backtrace {
     @!defs;
 }
 
-multi method load-defs(IO:D() :$file!) is hidden-from-backtrace {
+multi method load-defs(IO:D() :$file = $*IN) is hidden-from-backtrace {
     my @specs = $file.slurp.subst("\\\n", '', :g).lines;
     self.load-defs: :@specs;
 }

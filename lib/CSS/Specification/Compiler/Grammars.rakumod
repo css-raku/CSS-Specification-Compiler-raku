@@ -13,7 +13,7 @@ proto sub compile (|c) is export(:compile) {
 
 multi sub modifier('i') { RakuAST::Regex::InternalModifier::IgnoreCase.new }
 
-sub rule(RakuAST::Name:D $name, RakuAST::Regex:D $body) {
+sub rule(RakuAST::Name:D $name, $body) {
     RakuAST::RuleDeclaration.new(
             :$name,
             :$body,
@@ -336,7 +336,7 @@ multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
 
 multi sub compile($arg) { compile |$arg }
 
-method build-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
+method compile-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
     my $*ACTIONS = $.actions;
     my $*IN-PROTO = False;
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
