@@ -255,7 +255,11 @@ multi sub compile(:required(@combo)!) {
     compile(:@combo, :required);
 }
 
-sub quantified($atom is copy, $_, |c) {
+multi sub quantified($atom, '!') {
+    # todo. One of the children must be present
+    $atom;
+}
+multi sub quantified($atom is copy, $_, |c) {
     my %opt;
     if .tail ~~ ',' {
         $atom .= &ws;
