@@ -67,14 +67,15 @@ sub build-metadata(@defs, :%child-rules --> Hash) is export(:build-metadata) {
     %props;
 }
 
-sub find-child-props($rule-name, %child-rules, %children = %()) {
+sub find-child-props($rule-name, %child-rules, %seen = %()) {
+    my @kids;
     with %child-rules{$rule-name} {
-       for .grep({!%children{$_}}) -> $child {
-           %children{$child} = True;
-           $child.&find-child-props(%child-rules, %children);
+       for .grep({!%seen{$_}++}) -> $child {
+           @kids.push: $child;
+           @kids.append: $child.&find-child-props(%child-rules, %seen);
        }
     }
-    %children.keys.sort;
+    @kids;
 }
 
 sub find-edges(%props, %child-rules) {
