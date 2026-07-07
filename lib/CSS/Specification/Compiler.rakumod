@@ -11,7 +11,7 @@ also does CSS::Specification::Compiler::External;
 
 use CSS::Specification;
 use CSS::Specification::Actions;
-has CSS::Specification::Actions:D $.actions handles<child-props> .= new;
+has CSS::Specification::Actions:D $.actions handles<child-rules> .= new;
 has Associative @.defs;
 
 multi method load-defs(:@specs!) is hidden-from-backtrace {
@@ -42,31 +42,42 @@ multi method load-defs() is hidden-from-backtrace {
 
 has Hash $!metadata;
 method metadata {
-    $!metadata //= @!defs.&build-metadata: :%.child-props;
+    $!metadata //= @!defs.&build-metadata: :%.child-rules;
 }
 
-sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
+sub build-metadata(@defs, :%child-rules --> Hash) is export(:build-metadata) {
     my %props;
+    my %specs;
 
     for @defs
         .grep(*.<prop-spec>)
         .map(*.<prop-spec>)
         .sort(*.<props>[0])
-         -> %spec (:@props!, :$synopsis!, Bool:D :$inherit = False, :$default, *%) {
-        my $name = @props.head;
+         -> % (:@props!, :$synopsis!, Bool:D :$inherit = False, :$default, :%spec!, *%) {
         my %details = :$synopsis, :$inherit;
         %details<default> = $_ with $default;
 
         for @props.flat -> $prop-name {
+            %specs{$prop-name} = %spec;
             %props{$prop-name} = %details;
         }
     }
-    %props.&find-edges(%child-props);
+    %props.&find-edges(%child-rules);
     %props.&check-edges;
     %props;
 }
 
-sub find-edges(%props, %child-props) {
+sub find-child-props($rule-name, %child-rules, %children = %()) {
+    with %child-rules{$rule-name} {
+       for .grep({!%children{$_}}) -> $child {
+           %children{$child} = True;
+           $child.&find-child-props(%child-rules, %children);
+       }
+    }
+    %children.keys.sort;
+}
+
+sub find-edges(%props, %child-rules) {
     # match boxed properties with children
     for %props.kv -> $key, $value {
         unless $key ~~ / '-'[top|right|bottom|left]<?before ['-'|$$]> / {
@@ -86,14 +97,12 @@ sub find-edges(%props, %child-props) {
             }
         }
     }
-    for %props.kv -> $key, $value {
-        with %child-props{$key} {
-            for .unique -> $child-prop {
-                next if $value<edges> && $value<edges>.grep($child-prop);
-                my $prop = %props{$child-prop};
-                # property may have multiple parents
-                $value<children>.push: $child-prop;
-            }
+    for %props.kv -> $prop-name, $value {
+        my $edges =  $value<edges> // {};
+        my @child-rules = ('css-val-' ~ $prop-name).&find-child-props(%child-rules);
+        my @child-props = @child-rules.grep(*.starts-with: 'css-val-').map(*.substr(8)).grep({!$edges{$_}}).unique;
+        if @child-props {
+            $value<children> = @child-props;
         }
         # we can get defaults from the children
         $value<default>:delete
@@ -103,9 +112,7 @@ sub find-edges(%props, %child-props) {
 }
 
 sub check-edges(%props) {
-    for %props.pairs {
-        my $key = .key;
-        my $value = .value;
+    for %props.kv -> $key, $value {
         my $edges = $value<edges>;
 
         note "box property doesn't have four edges $key: $edges"
@@ -120,4 +127,3 @@ sub check-edges(%props) {
         }
     }
 }
-

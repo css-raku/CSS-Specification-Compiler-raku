@@ -231,7 +231,7 @@ for (
     my $protos    := $expected<protos>;
 
     subtest $input, {
-        my @*PROP-NAMES = [];
+        my @*DECL-NAMES = [];
 
         my CSS::Specification::Actions $actions .= new;
         my $*VAR = 'A';

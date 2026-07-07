@@ -41,8 +41,8 @@
   },
   "cue": {
     "children": [
-      "cue-before",
-      "cue-after"
+      "cue-after",
+      "cue-before"
     ],
     "inherit": false,
     "synopsis": "[ 'cue-before' || 'cue-after' ]"
