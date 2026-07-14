@@ -95,18 +95,19 @@ multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
 sub op(Str:D $op) { :$op.&compile } 
 
 # <a>#? , <b>  ->  [<a> *%% ',']? <b>
-multi sub compile(:occurs(@)! ( '?', :$trailing! where .so, :occurs(@)! (',', *%term))) {
+multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', :occurs(@)! (',', *%term))) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
     $atom.&quantified('*', :separator($trailing.&op), :trailing-separator).&group;
 }
 
 # <a>? , <b>   ->  [<a> ',']? <b>
-multi sub compile(:occurs(@)! ( '?', :$trailing! where .so, *%term)) {
+multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
     [$atom, $trailing.&op].&group.&quantified: '?';
 }
 
 multi sub compile(:occurs(@)! ( $quant!, :$trailing, *%term)) {
+    warn "ignoring trailing {.raku}" with $trailing;
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
     $atom.&quantified: $quant;
 }
@@ -245,14 +246,12 @@ multi sub compile(:@numbers!) {
 
 sub lit-ws(Str:D() $_) is export { .&lit.&ws }
 
+multi sub compile(Str:D :$op! where $_ eq ',' && $*IN-PROTO) {
+    $op.&lit
+}
 multi sub compile(Str:D :$op!) {
-    if $op eq ',' && $*IN-PROTO {
-        $op.&lit;
-    }
-    else {
-        my RakuAST::ArgList $args = $op.&arg;
-        'op'.&assertion(:$args);
-    }
+    my RakuAST::ArgList $args = $op.&arg;
+    'op'.&assertion(:$args);
 }
 
 multi sub compile(:@alt!)   { @alt.map(&compile).map(&ws).&seq(:alt) }
@@ -267,11 +266,10 @@ multi sub quantified($atom, '!') {
     # todo. One of the children must be present
     $atom;
 }
-multi sub quantified($atom, $_, |c) {
-    my %opt;
-    %opt<separator> = ','.&op.&quantified('?') if .tail ~~ ',';
+multi sub quantified($atom, $_, *%opt) {
+    %opt<separator> //= ','.&op.&quantified('?') if .tail ~~ ',';
     my RakuAST::Regex::Quantifier $quantifier = .&quant;
-    RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, |%opt, |c;
+    RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, |%opt;
 }
 
 multi sub compile(:@combo!, Bool :$required) {
@@ -308,13 +306,13 @@ multi sub compile(:%signature! ( :@args! is copy ) ) {
     @optional.append: @args.pop.value
        if @args.tail ~~ Pair && @args.tail.key ~~ 'optional';
     for @args {
-        @seq.push: ','.&lit.&ws if @seq;
+        @seq.push: ','.&lit-ws if @seq;
         @seq.push: .&compile.&ws;
     }
     # not rigorous
     for @optional {
         my $atom = @seq
-            ?? [','.&lit.&ws, .&compile.&ws].&group
+            ?? [','.&lit-ws, .&compile.&ws].&group
             !! .&compile.&ws;
         @seq.push: $atom.&quantified('?').&ws;
                        }
@@ -338,7 +336,7 @@ multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
     );
     my $args = [(:%signature).&compile.&ws, Usage].&seq(:alt).&ws.&group;
     my $body = ['i'.&modifier,
-                ($func ~ '(').&lit.&ws, $args.&ws, ')'.&lit].&seq.&ws;
+                ($func ~ '(').&lit-ws, $args.&ws, ')'.&lit].&seq.&ws;
     my Str $leading = $_ ~ "\n" given $synopsis;
     $func.&name.&rule($body).declarator-docs(:$leading);
 }
