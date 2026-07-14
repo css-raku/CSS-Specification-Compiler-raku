@@ -75,19 +75,19 @@ for (
     'values' => {
         input => '<length>#',
         ast => :occurs[',', :rule<length>],
-        DEPARSE => '<length> +% <op(",")>',
+        DEPARSE => '<length> +% <op(",")>?',
         rule-refs => ['length'],
     },
     'values' => {
         input => '<length>#{1,4}',
         ast => :occurs[[1, 4, ','], :rule<length>],
-        DEPARSE => '<length> ** 1..4% <op(",")>',
+        DEPARSE => '<length> ** 1..4% <op(",")>?',
         rule-refs => ['length'],
     },
     'values' => {
         input => '[<generic-voice> | <specific-voice> ]#',
         ast => :occurs[",", :group(:alt[:rule("generic-voice"), :rule("specific-voice")])],
-        DEPARSE => '[<generic-voice> || <specific-voice> ] +% <op(",")>',
+        DEPARSE => '[<generic-voice> || <specific-voice> ] +% <op(",")>?',
         rule-refs => ['generic-voice', 'specific-voice'],
     },
     'values' => {
@@ -100,9 +100,21 @@ for (
     },
     'values' => {
         input => '<a>#? , <b>',
-        ast => :seq[:occurs[["*", ",", :trailing], :rule<a>], :rule<b>],
-        DEPARSE => '[<a> <op(",")> ]* <b>',
+        ast => :seq[:occurs["?", :occurs[",", :rule<a>], :trailing<,>], :rule<b>],
+        DEPARSE => '[<a> *%% <op(",")>] <b>',
         rule-refs => ['a', 'b'],
+    },
+   'values' => {
+        input => '<bg-layer>#? , <final-bg-layer>',
+        ast => :seq[:occurs["?", :occurs[",", :rule<bg-layer>], :trailing<,>], :rule<final-bg-layer>],
+        DEPARSE => '[<bg-layer> *%% <op(",")>] <final-bg-layer>',
+        rule-refs => ['bg-layer', 'final-bg-layer'],
+    },
+   'values' => {
+        input => '[ <angle> | <zero> | to <side-or-corner> ]? , <color-stop-list>',
+        ast => :seq[:occurs["?", :group(:alt[:rule<angle>, :rule<zero>, :seq[:keyw<to>, :rule<side-or-corner>]]), :trailing<,>], :rule<color-stop-list>],
+        DEPARSE => '[[<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
+        rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {
         input => 'example( first? , second? , third? )',
@@ -120,6 +132,26 @@ for (
             :synopsis("ltr | rtl | inherit"),
             :inherit
         },
+        DEPARSE => join(
+            "\n",
+            q<#| direction: ltr | rtl | inherit>,
+            q<rule decl:sym<direction> { :i (direction) ":" <val(/<css-val-direction> /, &?ROUTINE.WHY)>}>,
+            q<rule css-val-direction { :i [ltr | rtl | inherit ]& <keyw>  }>
+        ),
+    },
+    'prop-spec' => {
+        input => join(
+            "\t", q<'voice-family'>, q<[<generic-voice> | <specific-voice> ]#>, q<depends on user agent> ),
+        ast => :prop-spec{
+:default("depends on user agent"), :props($["voice-family"]), :spec(:occurs([",", :group(:alt([:rule("generic-voice"), :rule("specific-voice")]))])), :synopsis("[<generic-voice> | <specific-voice> ]#"),
+           },
+        rule-refs => ["generic-voice", "specific-voice"],
+        DEPARSE => join(
+            "\n",
+            q<#| voice-family: [<generic-voice> | <specific-voice> ]#>,
+            q<rule decl:sym<voice-family> { :i ("voice-family") ":" <val(/<css-val-voice-family> /, &?ROUTINE.WHY)>}>,
+            q<rule css-val-voice-family { :i [<generic-voice> || <specific-voice> ] +% <op(",")>? }>
+        ),
     },
     'func-spec' => {
         # structured
@@ -139,7 +171,7 @@ for (
         protos => {:rect{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")}},
         DEPARSE => join("\n",
                         '#| rect([<length> | auto]#{4,4})',
-                        'rule rect { :i "rect(" [[<length> || auto & <keyw> ] ** 4% "," || <usage(&?ROUTINE.WHY)> ] ")" }',
+                        'rule rect { :i "rect(" [[<length> || auto & <keyw> ] ** 4% ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
                        ),
         rule-refs => ["length"],
     },

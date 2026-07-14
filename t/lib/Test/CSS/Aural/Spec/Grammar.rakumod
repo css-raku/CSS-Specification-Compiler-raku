@@ -66,8 +66,8 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule decl:sym<stress> {     :i (stress) ":" <val(/<css-val-stress> /, &?ROUTINE.WHY)>}
     rule css-val-stress { :i <number> }
     #| voice-family: [<generic-voice> | <specific-voice> ]#
-    rule decl:sym<voice-family> {     :i ("voice-family") ":" <val(/<css-val-voice-family> +% <op(",")> /, &?ROUTINE.WHY)>}
-    rule css-val-voice-family { :i [<generic-voice> || <specific-voice> ] }
+    rule decl:sym<voice-family> {     :i ("voice-family") ":" <val(/<css-val-voice-family> /, &?ROUTINE.WHY)>}
+    rule css-val-voice-family { :i [<generic-voice> || <specific-voice> ] +% <op(",")>? }
     #| <generic-voice> = male | female | child
     rule generic-voice {     :i [male | female | child ]& <keyw>  }
     #| <specific-voice> = <identifier> | <string>

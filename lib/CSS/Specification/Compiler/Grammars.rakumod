@@ -24,7 +24,8 @@ sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
     my RakuAST::Name $name = "decl:sym<$prop-name>".&name;
     my RakuAST::Regex $regex-body = $base-val.&assertion;
 
-    $regex-body .= &quantified: $_ with $quant;
+    $regex-body .= &quantified: $_
+        with $quant;
 
     $name.&rule(
         seq (
@@ -53,15 +54,15 @@ sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
     );
 }
 
-my subset Recurring of Pair where .key eq 'occurs';
-
 multi sub compile(:%prop-spec! (:@props!, :$default, Pair :$spec! is copy, Str :$synopsis!, Bool :$inherit = True)) {
     my $quant;
-    if $spec ~~ Recurring {
+
+    if $spec.key eq 'occurs' && $spec.value.head ~~ [*, 4] {
         ($quant, $spec) = $spec.value.List;
     }
+
     my RakuAST::Regex $body = $spec.&compile;
-    $body = ('i'.&modifier,  $body.&ws, ).&seq;
+    $body = ('i'.&modifier, $body.&ws, ).&seq;
     my Str $leading = (@props.head, ': ', $_, "\n").join
         given $synopsis;
 
@@ -81,7 +82,7 @@ multi sub compile(:%prop-spec! (:@props!, :$default, Pair :$spec! is copy, Str :
 
 multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
     my RakuAST::Regex $body = $spec.&compile;
-    $body = ('i'.&modifier,  $body.&ws, ).&seq;
+    $body = ('i'.&modifier, $body.&ws, ).&seq;
 
     my Str $leading = "<%s> = %s\n".sprintf: $rule, $synopsis;
     my RakuAST::Name $name = $rule.&name;
@@ -91,17 +92,23 @@ multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
     ).&expression.List
 }
 
-multi sub compile(:@occurs! ( @ ['*', ',', :$trailing! where .so], *%term) ) {
-    my RakuAST::Regex $atom = [compile(|%term).&ws, compile(:op<,>).&ws].&seq.&group;
-    $atom.&quantified: '*';
+sub op(Str:D $op) { :$op.&compile } 
+
+# <a>#? , <b>  ->  [<a> *%% ',']? <b>
+multi sub compile(:occurs(@)! ( '?', :$trailing! where .so, :occurs(@)! (',', *%term))) {
+    my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
+    $atom.&quantified('*', :separator($trailing.&op), :trailing-separator).&group;
 }
 
-multi sub compile(:@occurs! ( $quant!, *%term)) {
+# <a>? , <b>   ->  [<a> ',']? <b>
+multi sub compile(:occurs(@)! ( '?', :$trailing! where .so, *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    my %opt;
-    %opt<trailing-separator> = .value
-       with $quant.first: {.isa(Pair) && .key eq 'trailing'};
-    $atom.&quantified: $quant, |%opt;
+    [$atom, $trailing.&op].&group.&quantified: '?';
+}
+
+multi sub compile(:occurs(@)! ( $quant!, :$trailing, *%term)) {
+    my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
+    $atom.&quantified: $quant;
 }
 
 multi sub quant('?') { RakuAST::Regex::Quantifier::ZeroOrOne.new }
@@ -111,7 +118,7 @@ multi sub quant(',') { RakuAST::Regex::Quantifier::OneOrMore.new }
 multi sub quant(@ ( UInt:D $min, UInt:D $max, *@) ) {
     RakuAST::Regex::Quantifier::Range.new: :$min, :$max
 }
-multi sub quant(@ ( Str:D $_, ',', :trailing($)) ) {  # list-maybe
+multi sub quant(@ ( Str:D $_, ',') ) {  # list-maybe
     .&quant;
 }
 
@@ -150,6 +157,7 @@ multi sub ws(RakuAST::Regex $r) is export { RakuAST::Regex::WithWhitespace.new($
 
 sub lit(Str:D $s) is export { RakuAST::Regex::Literal.new($s) }
 
+multi sub group(@seq) { @seq.&seq.&group }
 multi sub group(RakuAST::Regex::Group $g) {$g}
 multi sub group(RakuAST::Regex::Assertion $a) {$a}
 multi sub group(RakuAST::Regex $r) is export  {
@@ -259,12 +267,9 @@ multi sub quantified($atom, '!') {
     # todo. One of the children must be present
     $atom;
 }
-multi sub quantified($atom is copy, $_, |c) {
+multi sub quantified($atom, $_, |c) {
     my %opt;
-    if .tail ~~ ',' {
-        $atom .= &ws;
-        %opt<separator> = compile(:op<,>);
-    }
+    %opt<separator> = ','.&op.&quantified('?') if .tail ~~ ',';
     my RakuAST::Regex::Quantifier $quantifier = .&quant;
     RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, |%opt, |c;
 }
@@ -309,7 +314,7 @@ multi sub compile(:%signature! ( :@args! is copy ) ) {
     # not rigorous
     for @optional {
         my $atom = @seq
-            ?? [','.&lit.&ws, .&compile.&ws].&seq.&group
+            ?? [','.&lit.&ws, .&compile.&ws].&group
             !! .&compile.&ws;
         @seq.push: $atom.&quantified('?').&ws;
                        }
@@ -318,7 +323,7 @@ multi sub compile(:%signature! ( :@args! is copy ) ) {
 multi sub compile(:%signature!) { compile |%signature }
 
 multi sub compile(:paren(@seq)!) {
-    [(:op<(>).&compile.&ws, (:@seq).&compile, (:op<)>).&compile.&ws].&seq;
+    ['('.&op.&ws, (:@seq).&compile, ')'.&op.&ws].&seq;
 }
 
 multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
