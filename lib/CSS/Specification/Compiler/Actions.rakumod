@@ -81,6 +81,12 @@ method !actions-methods {
             my RakuAST::Name $name = $rule.&name;
             @methods.push: RakuAST::Method.new: :$name, :$signature, body => $rule-body;
         }
+        elsif $def<func-spec> -> % (:$rule, :$func, *%){
+            if $rule {
+                my RakuAST::Name $name = $rule.&name;
+                @methods.push: RakuAST::Method.new: :$name, :$signature, body => $func.&call-make-func;
+            }
+        }
     }
 
     for $.actions.funcs.keys.sort {

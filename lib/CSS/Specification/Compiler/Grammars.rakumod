@@ -324,7 +324,7 @@ multi sub compile(:paren(@seq)!) {
     ['('.&op.&ws, (:@seq).&compile, ')'.&op.&ws].&seq;
 }
 
-multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
+multi sub compile(:%func-spec! ( :$func!, :$rule=$func, :%signature!, :$synopsis!) ) {
 
     my $*IN-PROTO = True;
     my constant Usage =  RakuAST::Regex::Assertion::Named::Args.new(
@@ -338,7 +338,7 @@ multi sub compile(:%func-spec! ( :$func!, :%signature!, :$synopsis!) ) {
     my $body = ['i'.&modifier,
                 ($func ~ '(').&lit-ws, $args.&ws, ')'.&lit].&seq.&ws;
     my Str $leading = $_ ~ "\n" given $synopsis;
-    $func.&name.&rule($body).declarator-docs(:$leading);
+    $rule.&name.&rule($body).declarator-docs(:$leading);
 }
 
 multi sub compile($arg) { compile |$arg }
