@@ -153,6 +153,7 @@ for (
             q<rule css-val-voice-family { :i [<generic-voice> || <specific-voice> ] +% <op(",")>? }>
         ),
     },
+
     'func-spec' => {
         # structured
         input => '<example()> = example(a, b, c?, d?)',
@@ -189,6 +190,15 @@ for (
         :tidy,
         DEPARSE => '[bold & <keyw> :my $*A; <!{ $*A++ }>|| [thin & <keyw> :my $*C; <!{ $*C++ }>|| <length> :my $*D; <!{ $*D++ }>]** 2 :my $*B; <!{ $*B++ }>]+',
         rule-refs => ['length'],
+    },
+    'rule-spec' => {
+        input => '<reversed-counter-name> = reversed( <counter-name> )',
+        ast => :func-spec{:func<reversed>, :rule<reversed-counter-name>, :signature{:args[:rule<counter-name>]}, :synopsis("reversed( <counter-name> )")},
+        rule-refs => ['counter-name'],
+        DEPARSE => join("\n",
+                        q<#| reversed( <counter-name> )>,
+                        q<rule reversed-counter-name { :i "reversed(" [<counter-name> || <usage(&?ROUTINE.WHY)> ] ")" }>
+                       ),
     },
     'prop-spec' => {
         input => join("\t", 'border-color','<color>{1,4}', 'transparent'),
