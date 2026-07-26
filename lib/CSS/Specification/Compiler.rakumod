@@ -11,7 +11,7 @@ also does CSS::Specification::Compiler::External;
 
 use CSS::Specification;
 use CSS::Specification::Actions;
-has CSS::Specification::Actions:D $.actions handles<child-rules> .= new;
+has CSS::Specification::Actions:D $.actions handles<child-props> .= new;
 has Associative @.defs;
 
 multi method load-defs(:@specs!) is hidden-from-backtrace {
@@ -42,10 +42,10 @@ multi method load-defs() is hidden-from-backtrace {
 
 has Hash $!metadata;
 method metadata {
-    $!metadata //= @!defs.&build-metadata: :%.child-rules;
+    $!metadata //= @!defs.&build-metadata: :%.child-props;
 }
 
-sub build-metadata(@defs, :%child-rules --> Hash) is export(:build-metadata) {
+sub build-metadata(@defs, :%child-props --> Hash) is export(:build-metadata) {
     my %props;
     my %specs;
 
@@ -62,23 +62,34 @@ sub build-metadata(@defs, :%child-rules --> Hash) is export(:build-metadata) {
             %props{$prop-name} = %details;
         }
     }
-    %props.&find-edges(%child-rules);
+    %props.&find-edges(%child-props);
     %props.&check-edges;
     %props;
 }
 
-sub find-child-props($rule-name, %child-rules, %seen = %()) {
+sub find-child-props($rule-name, %child-props, %seen = %()) {
     my @kids;
-    with %child-rules{$rule-name} {
+    with %child-props{$rule-name} {
        for .grep({!%seen{$_}++}) -> $child {
            @kids.push: $child;
-           @kids.append: $child.&find-child-props(%child-rules, %seen);
+           @kids.append: $child.&find-child-props(%child-props, %seen);
        }
     }
     @kids;
 }
 
-sub find-edges(%props, %child-rules) {
+sub remove-child(%meta, $prop) {
+    with %meta<children> {
+        if .grep: {$_ ne $prop} -> @children {
+            $_= @children;
+        }
+        else {
+            %meta<children>:delete;
+        }
+    }
+}
+
+sub find-edges(%props, %child-props) {
     # match boxed properties with children
     for %props.kv -> $key, $value {
         unless $key ~~ / '-'[top|right|bottom|left]<?before ['-'|$$]> / {
@@ -98,11 +109,21 @@ sub find-edges(%props, %child-rules) {
             }
         }
     }
+    my %parent;
     for %props.kv -> $prop-name, $value {
-        my $edges =  $value<edges> // {};
-        my @child-rules = ('css-val-' ~ $prop-name).&find-child-props(%child-rules);
-        my @child-props = @child-rules.grep(*.starts-with: 'css-val-').map(*.substr(8)).grep({!$edges{$_}}).unique;
+        my $edges = $value<edges> // {};
+        my Str @child-props = ('css-val-' ~ $prop-name).&find-child-props(%child-props);
+        @child-props .= grep({!$edges{$_}}).unique;
         if @child-props {
+            for @child-props -> $child {
+                with %parent{$child} {
+                    warn "$child has multiple parents: $_, $prop-name";
+                    %props{ %parent{$child} }.&remove-child: $child;
+                }
+                else {
+                    $_ = $prop-name;
+                }
+            }
             $value<children> = @child-props;
         }
         # we can get defaults from the children
