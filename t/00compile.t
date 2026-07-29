@@ -101,19 +101,19 @@ for (
     'values' => {
         input => '<a>#? , <b>',
         ast => :seq[:occurs["?", :occurs[",", :rule<a>], :trailing<,>], :rule<b>],
-        DEPARSE => '[<a> *%% <op(",")>] <b>',
+        DEPARSE => '[:!r <a> +% <op(",")> <op(",")>]? <b>',
         rule-refs => ['a', 'b'],
     },
    'values' => {
         input => '<bg-layer>#? , <final-bg-layer>',
         ast => :seq[:occurs["?", :occurs[",", :rule<bg-layer>], :trailing<,>], :rule<final-bg-layer>],
-        DEPARSE => '[<bg-layer> *%% <op(",")>] <final-bg-layer>',
+        DEPARSE => '[:!r <bg-layer> +% <op(",")> <op(",")>]? <final-bg-layer>',
         rule-refs => ['bg-layer', 'final-bg-layer'],
     },
    'values' => {
         input => '[ <angle> | <zero> | to <side-or-corner> ]? , <color-stop-list>',
         ast => :seq[:occurs["?", :group(:alt[:rule<angle>, :rule<zero>, :seq[:keyw<to>, :rule<side-or-corner>]]), :trailing<,>], :rule<color-stop-list>],
-        DEPARSE => '[[<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
+        DEPARSE => '[:!r [<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
         rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {

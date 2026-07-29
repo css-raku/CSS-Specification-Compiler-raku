@@ -12,6 +12,7 @@ proto sub compile (|c) is export(:compile) {
 }
 
 multi sub modifier('i') { RakuAST::Regex::InternalModifier::IgnoreCase.new }
+multi sub modifier('!r') { RakuAST::Regex::InternalModifier::Ratchet.new: :modifier<r>, :negated }
 
 sub rule(RakuAST::Name:D $name, $body) {
     RakuAST::RuleDeclaration.new(
@@ -94,16 +95,17 @@ multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
 
 sub op(Str:D $op) { :$op.&compile } 
 
-# <a>#? , <b>  ->  [<a> *%% ',']? <b>
+# <a>#? , <b>  ->  [[<a> +% ','] ',']? <b>
 multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', :occurs(@)! (',', *%term))) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    $atom.&quantified('*', :separator($trailing.&op), :trailing-separator).&group;
+    my RakuAST::Regex $lhs = $atom.&quantified('+', :separator($trailing.&op));
+    ['!r'.&modifier, $lhs.&ws, $trailing.&op].&group.&quantified: '?';
 }
 
 # <a>? , <b>   ->  [<a> ',']? <b>
 multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    [$atom, $trailing.&op].&group.&quantified: '?';
+    ['!r'.&modifier, $atom, $trailing.&op].&group.&quantified: '?';
 }
 
 multi sub compile(:occurs(@)! ( $quant!, :$trailing, *%term)) {
