@@ -43,6 +43,12 @@ for (
         DEPARSE => '[35 | 7 ]& <number> || [42 & <number>] ?',
     },
     'values' => {
+        input => '<a> | !<b> | <c> | !<d>',
+        ast => :alt[ :rule<b>, :rule<d>, :rule<a>, :rule<c> ],
+        rule-refs => ["a", "b", "c", "d"],
+        DEPARSE => '<b> || <d> || <a> || <c>',
+    },
+    'values' => {
         input => "<rule-ref>",
         ast => :rule<rule-ref>,
         DEPARSE => "<rule-ref>",
@@ -65,6 +71,12 @@ for (
         ast => :seq[ :rule<rule>, :occurs["*", :group( :seq[:op<,>, :group(:alt[:rule<css-val-css21-prop>, :rule<css-val-css3-prop>])])]],
         DEPARSE => '<rule> [<op(",")> [<css-val-css21-prop> || <css-val-css3-prop> ] ] *',
         rule-refs => ["css-val-css21-prop", "css-val-css3-prop", "rule"],
+    },
+    'values' => {
+        input => q{<'font-variant'=.font-variant-css2>},
+        ast => :alias{ :ref<font-variant>, :rule<font-variant-css2> },
+        rule-refs => ["font-variant-css2"],
+        DEPARSE => '<css-val-font-variant=.font-variant-css2>',
     },
     'values' => {
         input => '<length>{4}',

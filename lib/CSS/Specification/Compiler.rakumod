@@ -17,7 +17,7 @@ has Associative @.defs;
 multi method load-defs(:@specs!) is hidden-from-backtrace {
     for @specs -> $spec is copy {
         # handle full line comments
-        next if $spec.starts-with('#') || $spec eq '';
+        next if $spec.starts-with('#') || $spec.starts-with('Name') || $spec eq '';
         # '| inherit' and '| initial' are implied, context dependant, and
         # inconsistantly specified. Treat them as implied.
         $spec .= subst(/\s* '|' \s* [inherit|initial]/, '', :g);

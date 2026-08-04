@@ -81,7 +81,7 @@ multi sub compile(:%prop-spec! (:@props!, :$default, Pair :$spec! is copy, Str :
     @exprs;
 }
 
-multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
+multi sub compile(:rule-spec(%)! (Str :$rule!, :$spec!, Str :$synopsis!)) {
     my RakuAST::Regex $body = $spec.&compile;
     $body = ('i'.&modifier, $body.&ws, ).&seq;
 
@@ -93,19 +93,29 @@ multi sub compile(:%rule-spec! (Str :$rule!, :$spec!, Str :$synopsis!)) {
     ).&expression.List
 }
 
+multi sub compile(:alias(%)! (Str:D :$ref!, Str:D :$rule!)) {
+    my Str:D $name = 'css-val-' ~ $ref;
+    RakuAST::Regex::Assertion::Alias.new(
+        :$name,
+        assertion => RakuAST::Regex::Assertion::Named.new(
+            name => $rule.&name,
+        )
+    )
+}
+
 sub op(Str:D $op) { :$op.&compile } 
 
-# <a>#? , <b>  ->  [[<a> +% ','] ',']? <b>
+# <a>#? , <b>  ->  [:!r [<a> +% ','] ',']? <b>
 multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', :occurs(@)! (',', *%term))) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
     my RakuAST::Regex $lhs = $atom.&quantified('+', :separator($trailing.&op));
     ['!r'.&modifier, $lhs.&ws, $trailing.&op].&group.&quantified: '?';
 }
 
-# <a>? , <b>   ->  [<a> ',']? <b>
+# <a>? , <b>   ->  [:!r <a> ',']? <b>
 multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', *%term)) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    ['!r'.&modifier, $atom, $trailing.&op].&group.&quantified: '?';
+    [$atom, $trailing.&op].&group.&quantified: '?';
 }
 
 multi sub compile(:occurs(@)! ( $quant!, :$trailing, *%term)) {
