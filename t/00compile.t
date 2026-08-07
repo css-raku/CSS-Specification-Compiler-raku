@@ -74,9 +74,15 @@ for (
     },
     'values' => {
         input => q{<'font-variant'=.font-variant-css2>},
-        ast => :alias{ :ref<font-variant>, :rule<font-variant-css2> },
+        ast => :alias{ :ref<css-val-font-variant>, :rule<font-variant-css2> },
         rule-refs => ["font-variant-css2"],
         DEPARSE => '<css-val-font-variant=.font-variant-css2>',
+    },
+    'values' => {
+        input => q{<'grid-template'=.'grid-template-rows'>},
+        ast => :alias{ :ref<css-val-grid-template>, :rule<css-val-grid-template-rows> },
+        rule-refs => ["css-val-grid-template-rows"],
+        DEPARSE => '<css-val-grid-template=.css-val-grid-template-rows>',
     },
     'values' => {
         input => '<length>{4}',
@@ -125,7 +131,7 @@ for (
    'values' => {
         input => '[ <angle> | <zero> | to <side-or-corner> ]? , <color-stop-list>',
         ast => :seq[:occurs["?", :group(:alt[:rule<angle>, :rule<zero>, :seq[:keyw<to>, :rule<side-or-corner>]]), :trailing<,>], :rule<color-stop-list>],
-        DEPARSE => '[:!r [<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
+        DEPARSE => '[[<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
         rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {

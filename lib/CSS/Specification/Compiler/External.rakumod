@@ -37,13 +37,13 @@ method !interface-methods {
         :$parameters
     );
 
-    my RakuAST::Blockoid $body .= new(
+    my RakuAST::Blockoid $stub .= new(
         RakuAST::Stub::Fail.new.&expression.&statements
     );
 
     my Str @stubs = %unresolved.keys.sort;
     @stubs.map: {
         my RakuAST::Name $name = .&name;
-        RakuAST::Method.new: :$name, :$signature, :$body;
+        RakuAST::Method.new: :$name, :$signature, :body($stub);
     }
 }

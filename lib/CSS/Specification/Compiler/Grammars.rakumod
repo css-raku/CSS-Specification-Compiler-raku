@@ -94,7 +94,7 @@ multi sub compile(:rule-spec(%)! (Str :$rule!, :$spec!, Str :$synopsis!)) {
 }
 
 multi sub compile(:alias(%)! (Str:D :$ref!, Str:D :$rule!)) {
-    my Str:D $name = 'css-val-' ~ $ref;
+    my Str:D $name = $ref;
     RakuAST::Regex::Assertion::Alias.new(
         :$name,
         assertion => RakuAST::Regex::Assertion::Named.new(
