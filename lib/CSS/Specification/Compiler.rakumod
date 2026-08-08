@@ -88,6 +88,11 @@ sub remove-child(%meta, $prop) {
     }
 }
 
+multi sub is-parent-name('line-height', 'font') { True }
+multi sub is-parent-name($_, $parent) {
+    .starts-with($parent ~ '-') || .starts-with($parent.subst(/s$/, '') ~ '-') || .ends-with('-' ~ $parent)
+}
+
 sub find-edges(%props, :%child-rules!, :%child-props!) {
     # match boxed properties with children
     for %props.kv -> $key, $value {
@@ -112,14 +117,13 @@ sub find-edges(%props, :%child-rules!, :%child-props!) {
     for %props.kv -> $prop-name, $value {
         my $edges = $value<edges> // {};
         my @child-props = ('css-val-' ~ $prop-name).&find-child-props(:%child-rules, :%child-props);
-        @child-props .= grep({!$edges{$_}}).unique;
+        @child-props .= grep({!%parent{$_} && !$edges{$_} && .&is-parent-name($prop-name) });
         if @child-props {
             @child-props .= unique;
             for @child-props -> $child {
                 with %parent{$child} {
-                    unless $_ eq $prop-name {
-                        warn "$child has multiple parents: $_, $prop-name";
-                        %props{$_}.&remove-child: $child;
+                    if $_ ne $prop-name {
+                        warn "ignoring $_ as parent of $child in favor of $prop-name";
                     }
                 }
                 else {
