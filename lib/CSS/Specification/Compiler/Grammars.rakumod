@@ -70,7 +70,7 @@ multi sub compile(:%prop-spec! (:@props!, :$default, Pair :$spec! is copy, Str :
     my RakuAST::Statement::Expression @exprs;
 
     for @props -> $prop {
-        my $base-val = 'css-val-' ~ $prop;
+        my $base-val = 'prop-val-' ~ $prop;
         @exprs.push: $prop.&property-decl(:$quant, :$base-val).declarator-docs(
             :$leading
         ).&expression;

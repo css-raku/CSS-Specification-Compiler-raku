@@ -9,6 +9,9 @@ also does CSS::Specification::Compiler::Grammars;
 use CSS::Specification::Compiler::External;
 also does CSS::Specification::Compiler::External;
 
+use CSS::Specification::Compiler::Puncuation;
+also does CSS::Specification::Compiler::Puncuation;
+
 use CSS::Specification;
 use CSS::Specification::Actions;
 has CSS::Specification::Actions:D $.actions handles<child-props child-rules> .= new;
@@ -89,6 +92,7 @@ sub remove-child(%meta, $prop) {
 }
 
 multi sub is-parent-name('line-height', 'font') { True }
+multi sub is-parent-name('grid-template', 'grid') { False }
 multi sub is-parent-name($_, $parent) {
     .starts-with($parent ~ '-') || .starts-with($parent.subst(/s$/, '') ~ '-') || .ends-with('-' ~ $parent)
 }
@@ -116,7 +120,7 @@ sub find-edges(%props, :%child-rules!, :%child-props!) {
     my %parent;
     for %props.kv -> $prop-name, $value {
         my $edges = $value<edges> // {};
-        my @child-props = ('css-val-' ~ $prop-name).&find-child-props(:%child-rules, :%child-props);
+        my @child-props = ('prop-val-' ~ $prop-name).&find-child-props(:%child-rules, :%child-props);
         @child-props .= grep({!%parent{$_} && !$edges{$_} && .&is-parent-name($prop-name) });
         if @child-props {
             @child-props .= unique;

@@ -23,7 +23,7 @@ method compile-external(@role-id, Str :$scope = 'our') {
 method !interface-methods {
     my %unresolved = $.actions.rule-refs;
     %unresolved ,= $.actions.func-refs;
-    %unresolved{'css-val-' ~ $_}:delete
+    %unresolved{'prop-val-' ~ $_}:delete
         for $.actions.props.keys;
     %unresolved{$_}:delete
         for $.actions.rules.keys;
