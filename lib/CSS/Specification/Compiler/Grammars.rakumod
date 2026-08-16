@@ -21,8 +21,8 @@ sub rule(RakuAST::Name:D $name, $body) {
         )
 }
 
-sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
-    my RakuAST::Name $name = "decl:sym<$prop-name>".&name;
+sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
+    my RakuAST::Name $name = "decl:sym<$sym>".&name;
     my RakuAST::Regex $regex-body = $base-val.&assertion;
 
     $regex-body .= &quantified: $_
@@ -32,7 +32,7 @@ sub property-decl(Str:D $prop-name, :$quant, Str:D :$base-val!) {
         seq (
             'i'.&modifier,
             RakuAST::Regex::CapturingGroup.new(
-                $prop-name.&lit.&seq
+                $sym.&lit.&seq
             ).&ws,
             RakuAST::Regex::Quote.new(
                 RakuAST::QuotedString.new(
@@ -91,6 +91,23 @@ multi sub compile(:rule-spec(%)! (Str :$rule!, :$spec!, Str :$synopsis!)) {
     $name.&rule($body).declarator-docs(
         :$leading
     ).&expression.List
+}
+
+multi sub compile(:at-rule-spec(%)! (Str :$at-rule!, :$spec!, Str :$synopsis!)) {
+    my RakuAST::Regex $body = $spec.&compile;
+    $body = (
+        RakuAST::Regex::CapturingGroup.new(('i'.&modifier, $at-rule.&lit).&seq).&ws,
+        $body.&ws,
+    ).&seq;
+    my $base-val = 'at-rule-' ~ $at-rule;
+
+    my Str $leading = "\@%s %s\n".sprintf: $at-rule, $synopsis;
+    my RakuAST::Statement::Expression @exprs;
+    @exprs.push: $base-val.&name.&rule($body).declarator-docs(
+        :$leading
+    ).&expression
+        unless $*ACTIONS.rules{$base-val};
+    @exprs;
 }
 
 multi sub compile(:alias(%)! (Str:D :$ref!, Str:D :$rule!)) {
@@ -246,6 +263,11 @@ sub choice(@lits, RakuAST::Regex $term2) {
 
 multi sub compile(Str:D :$rule!) {
     $rule.&assertion;
+}
+
+multi sub compile(Str:D :at-rule($rule)!) {
+    my $at-rule = 'at-rule-' ~ $rule;
+    ('@'.&lit, $at-rule.&assertion).&seq;
 }
 
 multi sub compile(:@keywords!) {

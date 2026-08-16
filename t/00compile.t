@@ -141,6 +141,11 @@ for (
         DEPARSE => '<example>',
         func-refs => ["example"],
     },
+    'values' => {
+        input => '<@annotation>',
+        ast => :at-rule<annotation>,
+        DEPARSE => '"\@"<at-rule-annotation>',
+    },
     'prop-spec' => {
         input => "'direction'	ltr | rtl | inherit	ltr	all elements, but see prose	yes",
         ast => :prop-spec{
@@ -218,6 +223,24 @@ for (
                         q<rule reversed-counter-name { :i "reversed(" [<counter-name> || <usage(&?ROUTINE.WHY)> ] ")" }>
                        ),
     },
+    'at-rule-spec' => {
+        input => '@font-feature-values = @font-feature-values <font-family-name># { <declaration-rule-list> }',
+        ast => :at-rule-spec{
+            :at-rule<font-feature-values>,
+            :synopsis('<font-family-name># { <declaration-rule-list> }'),
+            :spec(
+                :seq[ { :occurs[",", { :rule<font-family-name>, } ] },
+                      :op<{>, :rule<declaration-rule-list>, :op<}>,
+                    ]
+            ),
+        },
+        rule-refs => ["declaration-rule-list", "font-family-name"],
+        DEPARSE => join("\n",
+                        '#| @font-feature-values <font-family-name># { <declaration-rule-list> }',
+                        'rule at-rule:sym<font-feature-values> { "\@"<at-rule=.at-rule-font-feature-values>}',
+                        'rule at-rule-font-feature-values { (:i "font-feature-values") <font-family-name> +% <op(",")>? <op("\{")> <declaration-rule-list> <op("}")>  }'
+                       ),
+    },
     'prop-spec' => {
         input => join("\t", 'border-color','<color>{1,4}', 'transparent'),
         ast => :prop-spec{
@@ -234,6 +257,16 @@ for (
     },
    'prop-spec' => {
         input => "font\t<'font-size'> [ / <'line-height'> ]? <'font-family'>#\t",
+        ast => :prop-spec{
+            :props['font'],
+            :default(''),
+            :spec(:seq[:rule<prop-val-font-size>,
+                       :occurs["?", :group(:seq([:op("/"), :rule<prop-val-line-height>]))],
+                       :occurs[",", :rule<prop-val-font-family>]
+                      ]),
+            :synopsis("<'font-size'> [ / <'line-height'> ]? <'font-family'>#"),
+        },
+        rule-refs => ["prop-val-font-family", "prop-val-font-size", "prop-val-line-height"],
     },
    'prop-spec' => {
         input => "'min-width'\t<length> | <percentage> | inherit\t0",

@@ -9,9 +9,6 @@ also does CSS::Specification::Compiler::Grammars;
 use CSS::Specification::Compiler::External;
 also does CSS::Specification::Compiler::External;
 
-use CSS::Specification::Compiler::Puncuation;
-also does CSS::Specification::Compiler::Puncuation;
-
 use CSS::Specification;
 use CSS::Specification::Actions;
 has CSS::Specification::Actions:D $.actions handles<child-props child-rules> .= new;
