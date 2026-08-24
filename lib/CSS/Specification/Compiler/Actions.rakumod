@@ -109,7 +109,7 @@ method !actions-methods {
             my $proto-name = "at-rule:sym<$sym>".&name;
             my $at-rule = 'at-rule-' ~ $sym;
             my $body = $at-rule.&compile-rule;
-             @methods.push: RakuAST::Method.new: name => $proto-name, :$signature, :$body;
+            @methods.push: RakuAST::Method.new: name => $proto-name, :$signature, :$body;
             my RakuAST::Name $name = $at-rule.&name;
             @methods.push: RakuAST::Method.new: :$name, :$signature, body => $at-rule-body;
         }

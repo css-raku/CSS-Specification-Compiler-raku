@@ -55,6 +55,18 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
     );
 }
 
+sub at-rule-decl(Str:D $sym, Str:D :$base-val!) {
+    my RakuAST::Name $rule-name = "decl:sym<\@$sym>".&name;
+    my RakuAST::Name $name = $base-val.&name;
+    my RakuAST::Regex::Assertion::Named $assertion .= new: :$name;
+    my $rule-body = ('@'.&lit,
+                     RakuAST::Regex::Assertion::Alias.new(
+                         :name<at-rule>, :$assertion
+                     )
+                    ).&seq;
+    $rule-name.&rule($rule-body);
+}
+
 multi sub compile(:%prop-spec! (:@props!, :$default, Pair :$spec! is copy, Str :$synopsis!, Bool :$inherit = True)) {
     my $quant;
 
@@ -103,9 +115,10 @@ multi sub compile(:at-rule-spec(%)! (Str :$at-rule!, :$spec!, Str :$synopsis!)) 
 
     my Str $leading = "\@%s %s\n".sprintf: $at-rule, $synopsis;
     my RakuAST::Statement::Expression @exprs;
-    @exprs.push: $base-val.&name.&rule($body).declarator-docs(
-        :$leading
-    ).&expression
+    @exprs.push: $at-rule.&at-rule-decl(:$base-val).declarator-docs(
+            :$leading
+        ).&expression;
+    @exprs.push: $base-val.&name.&rule($body).&expression
         unless $*ACTIONS.rules{$base-val};
     @exprs;
 }
@@ -283,6 +296,7 @@ sub lit-ws(Str:D() $_) is export { .&lit.&ws }
 multi sub compile(Str:D :$op! where $_ eq ',' && $*IN-PROTO) {
     $op.&lit
 }
+multi sub compile(Str:D :lit($_)!) { .&lit }
 multi sub compile(Str:D :$op!) {
     my RakuAST::ArgList $args = $op.&arg;
     'op'.&assertion(:$args);

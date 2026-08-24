@@ -230,15 +230,15 @@ for (
             :synopsis('<font-family-name># { <declaration-rule-list> }'),
             :spec(
                 :seq[ { :occurs[",", { :rule<font-family-name>, } ] },
-                      :op<{>, :rule<declaration-rule-list>, :op<}>,
+                      :lit<{>, :rule<declaration-rule-list>, :lit<}>,
                     ]
             ),
         },
         rule-refs => ["declaration-rule-list", "font-family-name"],
         DEPARSE => join("\n",
                         '#| @font-feature-values <font-family-name># { <declaration-rule-list> }',
-                        'rule at-rule:sym<font-feature-values> { "\@"<at-rule=.at-rule-font-feature-values>}',
-                        'rule at-rule-font-feature-values { (:i "font-feature-values") <font-family-name> +% <op(",")>? <op("\{")> <declaration-rule-list> <op("}")>  }'
+                        'rule decl:sym<@font-feature-values> { "\@"<at-rule=.at-rule-font-feature-values>}',
+                        'rule at-rule-font-feature-values { (:i "font-feature-values") <font-family-name> +% <op(",")>? "\{" <declaration-rule-list> "}"  }'
                        ),
     },
     'prop-spec' => {
