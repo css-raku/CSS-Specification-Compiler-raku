@@ -4,6 +4,7 @@ use Test;
 use CSS::Grammar::Test;
 
 use CSS::Specification;
+use CSS::Specification::Extended;
 use CSS::Specification::Actions;
 use CSS::Specification::Compiler;
 use CSS::Specification::Compiler::Actions;
@@ -44,6 +45,7 @@ for (
     },
     'values' => {
         input => '<a> | !<b> | <c> | !<d>',
+        :extended,
         ast => :alt[ :rule<b>, :rule<d>, :rule<a>, :rule<c> ],
         rule-refs => ["a", "b", "c", "d"],
         DEPARSE => '<b> || <d> || <a> || <c>',
@@ -73,13 +75,13 @@ for (
         rule-refs => ["prop-val-css21-prop", "prop-val-css3-prop", "rule"],
     },
     'values' => {
-        input => q{<'font-variant'=.font-variant-css2>},
+        input => q{<'font-variant'=.font-variant-css2>}, :extended,
         ast => :alias{ :ref<prop-val-font-variant>, :rule<font-variant-css2> },
         rule-refs => ["font-variant-css2"],
         DEPARSE => '<prop-val-font-variant=.font-variant-css2>',
     },
     'values' => {
-        input => q{<'grid-template'=.'grid-template-rows'>},
+        input => q{<'grid-template'=.'grid-template-rows'>}, :extended,
         ast => :alias{ :ref<prop-val-grid-template>, :rule<prop-val-grid-template-rows> },
         rule-refs => ["prop-val-grid-template-rows"],
         DEPARSE => '<prop-val-grid-template=.prop-val-grid-template-rows>',
@@ -319,12 +321,13 @@ for (
     ) {
 
     my $rule := .key;
-    my $expected := .value;
-    my $input := $expected<input>;
-    my $deparse := $expected<DEPARSE>;
+    my $expected  := .value;
+    my $input     := $expected<input>;
+    my $deparse   := $expected<DEPARSE>;
     my $rule-refs := $expected<rule-refs>;
     my $func-refs := $expected<func-refs>;
     my $protos    := $expected<protos>;
+    my $extended  := $expected<extended>;
 
     subtest $input, {
         my @*DECL-NAMES = [];
@@ -332,9 +335,12 @@ for (
         my CSS::Specification::Actions $actions .= new;
         my $*VAR = 'A';
         my $*ACTIONS = $actions;
+        my $grammar := $extended
+                        ?? CSS::Specification::Extended
+                        !! CSS::Specification;
 
         my $parse = CSS::Grammar::Test::parse-tests(
-            CSS::Specification, $input,
+            $grammar, $input,
             :$rule,
             :$actions,
             :suite<spec>,

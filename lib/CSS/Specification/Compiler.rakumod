@@ -9,7 +9,7 @@ also does CSS::Specification::Compiler::Grammars;
 use CSS::Specification::Compiler::External;
 also does CSS::Specification::Compiler::External;
 
-use CSS::Specification;
+use CSS::Specification::Extended;
 use CSS::Specification::Actions;
 has CSS::Specification::Actions:D $.actions handles<child-props child-rules> .= new;
 has Associative @.defs;
@@ -21,7 +21,7 @@ multi method load-defs(:@specs!) is hidden-from-backtrace {
         # '| inherit' and '| initial' are implied, context dependant, and
         # inconsistantly specified. Treat them as implied.
         $spec .= subst(/\s* '|' \s* [inherit|initial]/, '', :g);
-        my $/ = CSS::Specification.subparse($spec, :$!actions )
+        my $/ = CSS::Specification::Extended.subparse($spec, :$!actions )
             // die "unable to parse: $spec";
         my $ast = $/.ast;
         @!defs.append: @$ast;
