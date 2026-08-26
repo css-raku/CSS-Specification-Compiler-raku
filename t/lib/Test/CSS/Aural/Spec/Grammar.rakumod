@@ -3,15 +3,15 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule decl:sym<azimuth> {     :i (azimuth) ":" <val(/<prop-val-azimuth> /, &?ROUTINE.WHY)>}
     rule prop-val-azimuth { :i <angle> || [[[["left-side" | "far-left" | left | "center-left" | center | "center-right" | right | "far-right" | "right-side" ]& <keyw> ] :my $*A;<!{
         $*A++
-    }>|| behind & <keyw> :my $*B;<!{
+    }>|| [behind & <keyw> ] :my $*B;<!{
         $*B++
     }>]+] || [leftwards | rightwards ]& <keyw>   }
     #| cue-after: <uri> | none
     rule decl:sym<cue-after> {     :i ("cue-after") ":" <val(/<prop-val-cue-after> /, &?ROUTINE.WHY)>}
-    rule prop-val-cue-after { :i <uri> || none & <keyw>  }
+    rule prop-val-cue-after { :i <uri> || [none & <keyw> ]  }
     #| cue-before: <uri> | none
     rule decl:sym<cue-before> {     :i ("cue-before") ":" <val(/<prop-val-cue-before> /, &?ROUTINE.WHY)>}
-    rule prop-val-cue-before { :i <uri> || none & <keyw>  }
+    rule prop-val-cue-before { :i <uri> || [none & <keyw> ]  }
     #| cue: [ 'cue-before' || 'cue-after' ]
     rule decl:sym<cue> {     :i (cue) ":" <val(/<prop-val-cue> /, &?ROUTINE.WHY)>}
     rule prop-val-cue { :i [[<prop-val-cue-before> :my $*A;<!{
@@ -39,9 +39,9 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule prop-val-pitch { :i <frequency> || ["x-low" | low | medium | high | "x-high" ]& <keyw>   }
     #| play-during: <uri> [ mix || repeat ]? | auto | none
     rule decl:sym<play-during> {     :i ("play-during") ":" <val(/<prop-val-play-during> /, &?ROUTINE.WHY)>}
-    rule prop-val-play-during { :i <uri> [[mix & <keyw> :my $*A;<!{
+    rule prop-val-play-during { :i <uri> [[[mix & <keyw> ] :my $*A;<!{
         $*A++
-    }>|| repeat & <keyw> :my $*B;<!{
+    }>|| [repeat & <keyw> ] :my $*B;<!{
         $*B++
     }>]+] ?  || [auto | none ]& <keyw>   }
     #| richness: <number>
@@ -77,17 +77,17 @@ grammar Test::CSS::Aural::Spec::Grammar {
     rule prop-val-volume { :i <number> || <percentage> || [silent | "x-soft" | soft | medium | loud | "x-loud" ]& <keyw>   }
     #| border-color: [ <color> | transparent ]{1,4}
     rule decl:sym<border-color> {     :i ("border-color") ":" <val(/<prop-val-border-color>** 1..4 /, &?ROUTINE.WHY)>}
-    rule prop-val-border-color { :i [<color> || transparent & <keyw> ] }
+    rule prop-val-border-color { :i [<color> || [transparent & <keyw> ] ] }
     #| border-top-color: <color> | transparent
     rule decl:sym<border-top-color> {     :i ("border-top-color") ":" <val(/<prop-val-border-top-color> /, &?ROUTINE.WHY)>}
-    rule prop-val-border-top-color { :i <color> || transparent & <keyw>  }
+    rule prop-val-border-top-color { :i <color> || [transparent & <keyw> ]  }
     #| border-top-color: <color> | transparent
     rule decl:sym<border-right-color> {     :i ("border-right-color") ":" <val(/<prop-val-border-right-color> /, &?ROUTINE.WHY)>}
-    rule prop-val-border-right-color { :i <color> || transparent & <keyw>  }
+    rule prop-val-border-right-color { :i <color> || [transparent & <keyw> ]  }
     #| border-top-color: <color> | transparent
     rule decl:sym<border-bottom-color> {     :i ("border-bottom-color") ":" <val(/<prop-val-border-bottom-color> /, &?ROUTINE.WHY)>}
-    rule prop-val-border-bottom-color { :i <color> || transparent & <keyw>  }
+    rule prop-val-border-bottom-color { :i <color> || [transparent & <keyw> ]  }
     #| border-top-color: <color> | transparent
     rule decl:sym<border-left-color> {     :i ("border-left-color") ":" <val(/<prop-val-border-left-color> /, &?ROUTINE.WHY)>}
-    rule prop-val-border-left-color { :i <color> || transparent & <keyw>  }
+    rule prop-val-border-left-color { :i <color> || [transparent & <keyw> ]  }
 }

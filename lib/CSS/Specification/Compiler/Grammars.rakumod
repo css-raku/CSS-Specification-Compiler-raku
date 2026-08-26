@@ -262,7 +262,7 @@ sub unseen(Str:D $var) is export {
  }
 
 multi sub compile(Str:D :$keyw!) {
-    conjunct $keyw.&lit-ws, 'keyw'.&assertion;
+    group conjunct $keyw.&lit-ws, 'keyw'.&assertion.&ws;
 }
 
 multi sub compile(Str:D() :$num!) {

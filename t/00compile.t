@@ -21,12 +21,12 @@ for (
     'values' => {
         input => 'thin',
         ast   => :keyw<thin>,
-        DEPARSE => 'thin & <keyw>',
+        DEPARSE => '[thin & <keyw> ]',
     },
     'values' => {
         input => 'thin?',
         ast   => :occurs['?', :keyw<thin>],
-        DEPARSE => '[thin & <keyw>] ?',
+        DEPARSE => '[thin & <keyw> ] ?',
     },
     'values' => {
         input => 'thick | thin',
@@ -133,7 +133,7 @@ for (
    'values' => {
         input => '[ <angle> | <zero> | to <side-or-corner> ]? , <color-stop-list>',
         ast => :seq[:occurs["?", :group(:alt[:rule<angle>, :rule<zero>, :seq[:keyw<to>, :rule<side-or-corner>]]), :trailing<,>], :rule<color-stop-list>],
-        DEPARSE => '[[<angle> || <zero> || to & <keyw> <side-or-corner>  ] <op(",")>]? <color-stop-list>',
+        DEPARSE => '[[<angle> || <zero> || [to & <keyw> ] <side-or-corner>  ] <op(",")>]? <color-stop-list>',
         rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {
@@ -187,7 +187,7 @@ for (
         DEPARSE => join(
             "\n",
             '#| example(a, b, c?, d?)',
-            'rule example { :i "example(" [a & <keyw> "," b & <keyw> ["," c & <keyw> ]? ["," d & <keyw> ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
+            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ]? ["," [d & <keyw> ] ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
         ),
     },
     'func-spec' => {
@@ -197,7 +197,7 @@ for (
         protos => {:rect{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")}},
         DEPARSE => join("\n",
                         '#| rect([<length> | auto]#{4,4})',
-                        'rule rect { :i "rect(" [[<length> || auto & <keyw> ] ** 4% ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
+                        'rule rect { :i "rect(" [[<length> || [auto & <keyw> ] ] ** 4% ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
                        ),
         rule-refs => ["length"],
     },
@@ -206,14 +206,14 @@ for (
         input => 'bold thin && <length>',
         ast => :required[:seq[:keyw<bold>, :keyw<thin>], :rule("length")],
         :tidy,
-        DEPARSE => '[bold & <keyw> thin & <keyw> :my $*A; <!{ $*A++ }>|| <length> :my $*B; <!{ $*B++ }>]** 2',
+        DEPARSE => '[[bold & <keyw> ] [thin & <keyw> ] :my $*A; <!{ $*A++ }>|| <length> :my $*B; <!{ $*B++ }>]** 2',
         rule-refs => ['length'],
     },
     'values' => {
         input => 'bold || thin && <length>',
         ast => :combo[:keyw<bold>, :required[:keyw<thin>, :rule("length")]],
         :tidy,
-        DEPARSE => '[bold & <keyw> :my $*A; <!{ $*A++ }>|| [thin & <keyw> :my $*C; <!{ $*C++ }>|| <length> :my $*D; <!{ $*D++ }>]** 2 :my $*B; <!{ $*B++ }>]+',
+        DEPARSE => '[[bold & <keyw> ] :my $*A; <!{ $*A++ }>|| [[thin & <keyw> ] :my $*C; <!{ $*C++ }>|| <length> :my $*D; <!{ $*D++ }>]** 2 :my $*B; <!{ $*B++ }>]+',
         rule-refs => ['length'],
     },
     'rule-spec' => {
@@ -282,7 +282,7 @@ for (
         DEPARSE => join("\n",
                         '#| min-width: <length> | <percentage> | inherit',
                         'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<prop-val-min-width> /, &?ROUTINE.WHY)>}',
-                        'rule prop-val-min-width { :i <length> || <percentage> || inherit & <keyw>  }',
+                        'rule prop-val-min-width { :i <length> || <percentage> || [inherit & <keyw> ]  }',
                        ),
     },
     'prop-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
@@ -309,7 +309,7 @@ for (
                         DEPARSE => join("\n",
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
                                         'rule decl:sym<content> { :i (content) ":" <val(/<prop-val-content> /, &?ROUTINE.WHY)>}',
-                                        'rule prop-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || inherit & <keyw>  }',
+                                        'rule prop-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || [inherit & <keyw> ]  }',
                                        ),
 
     },
