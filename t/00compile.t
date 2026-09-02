@@ -137,9 +137,9 @@ for (
         rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {
-        input => 'example( first? , second? , third? )',
+        input => 'example( first , second? , third? )',
         ast => :func<example>,
-        protos => {:example{:func<example>, :signature{ :args[ :optional[ :keyw<first>,  :keyw<second>, :keyw<third>]]}, :synopsis("example( first? , second? , third? )")}},
+        protos => {:example{:func<example>, :signature{ :args[ :keyw<first>, :optional[  :keyw<second>, :keyw<third>]]}, :synopsis("example( first , second? , third? )")}},
         DEPARSE => '<example>',
         func-refs => ["example"],
     },
@@ -147,6 +147,11 @@ for (
         input => '<@annotation>',
         ast => :at-rule<annotation>,
         DEPARSE => '"\@"<at-rule-annotation>',
+    },
+    'values' => {
+        input => '(a, b, c?, d?)',
+        ast => :paren({:signature(${:args($[:keyw("a"), :keyw("b"), :optional([:keyw("c"), :keyw("d")])])})}),
+        DEPARSE => '<op("(")> [a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]? <op(")")>'
     },
     'prop-spec' => {
         input => "'direction'	ltr | rtl | inherit	ltr	all elements, but see prose	yes",
@@ -187,7 +192,7 @@ for (
         DEPARSE => join(
             "\n",
             '#| example(a, b, c?, d?)',
-            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ]? ["," [d & <keyw> ] ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
+            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
         ),
     },
     'func-spec' => {

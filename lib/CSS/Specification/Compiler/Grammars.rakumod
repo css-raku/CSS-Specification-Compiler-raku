@@ -350,26 +350,26 @@ multi sub compile(:%proto! ( :$func!, *%) ) {
 
 multi sub compile(:%signature! ( :@args! is copy ) ) {
     my @seq;
-    my @optional;
-    @optional.append: @args.pop.value
+    my @optional = @args.pop.value.List
        if @args.tail ~~ Pair && @args.tail.key ~~ 'optional';
     for @args {
         @seq.push: ','.&lit-ws if @seq;
         @seq.push: .&compile.&ws;
     }
-    # not rigorous
-    for @optional {
-        my $atom = @seq
-            ?? [','.&lit-ws, .&compile.&ws].&group
-            !! .&compile.&ws;
-        @seq.push: $atom.&quantified('?').&ws;
-                       }
+    if @optional {
+        my $opt := [','.&lit-ws, @optional.pop.&compile.&ws].&group.&quantified('?').&ws;
+        while @optional {
+            $opt := [','.&lit-ws, (@optional.pop.&compile.&ws, $opt).&seq].&group.&quantified('?').&ws;
+        }
+        @seq.append: $opt;
+    }
+
     @seq == 1 ?? @seq[0] !! @seq.&seq;
 }
 multi sub compile(:%signature!) { compile |%signature }
 
-multi sub compile(:paren(@seq)!) {
-    ['('.&op.&ws, (:@seq).&compile, ')'.&op.&ws].&seq;
+multi sub compile(:%paren! (:%signature!)) {
+    ['('.&op.&ws, (:%signature).&compile, ')'.&op.&ws].&seq;
 }
 
 multi sub compile(:%func-spec! ( :$func!, :$rule=$func, :%signature!, :$synopsis!) ) {
