@@ -121,19 +121,19 @@ for (
     'values' => {
         input => '<a>#? , <b>',
         ast => :seq[:occurs["?", :occurs[",", :rule<a>], :trailing<,>], :rule<b>],
-        DEPARSE => '[:!r <a> +% <op(",")> <op(",")>]? <b>',
+        DEPARSE => '[:!r <a> + % <op(",")> <op(",")>]? <b>',
         rule-refs => ['a', 'b'],
     },
    'values' => {
         input => '<bg-layer>#? , <final-bg-layer>',
         ast => :seq[:occurs["?", :occurs[",", :rule<bg-layer>], :trailing<,>], :rule<final-bg-layer>],
-        DEPARSE => '[:!r <bg-layer> +% <op(",")> <op(",")>]? <final-bg-layer>',
+        DEPARSE => '[:!r <bg-layer> + % <op(",")> <op(",")>]? <final-bg-layer>',
         rule-refs => ['bg-layer', 'final-bg-layer'],
     },
    'values' => {
         input => '[ <angle> | <zero> | to <side-or-corner> ]? , <color-stop-list>',
         ast => :seq[:occurs["?", :group(:alt[:rule<angle>, :rule<zero>, :seq[:keyw<to>, :rule<side-or-corner>]]), :trailing<,>], :rule<color-stop-list>],
-        DEPARSE => '[[<angle> || <zero> || [to & <keyw> ] <side-or-corner>  ] <op(",")>]? <color-stop-list>',
+        DEPARSE => '[[<angle> || <zero> || [to & <keyw> ] <side-or-corner> ] <op(",")>]? <color-stop-list>',
         rule-refs => ["angle", "color-stop-list", "side-or-corner", "zero"]
     },
     'values' => {
@@ -166,7 +166,7 @@ for (
             "\n",
             q<#| direction: ltr | rtl | inherit>,
             q<rule decl:sym<direction> { :i (direction) ":" <val(/<prop-val-direction> /, &?ROUTINE.WHY)>}>,
-            q<rule prop-val-direction { :i [ltr | rtl | inherit ]& <keyw>  }>
+            q<rule prop-val-direction { :i [ltr | rtl | inherit ]& <keyw> }>
         ),
     },
     'prop-spec' => {
@@ -180,7 +180,7 @@ for (
             "\n",
             q<#| voice-family: [<generic-voice> | <specific-voice> ]#>,
             q<rule decl:sym<voice-family> { :i ("voice-family") ":" <val(/<prop-val-voice-family> /, &?ROUTINE.WHY)>}>,
-            q<rule prop-val-voice-family { :i [<generic-voice> || <specific-voice> ] +% <op(",")>? }>
+            q<rule prop-val-voice-family { :i [<generic-voice> || <specific-voice> ] + % <op(",")>? }>
         ),
     },
 
@@ -192,7 +192,7 @@ for (
         DEPARSE => join(
             "\n",
             '#| example(a, b, c?, d?)',
-            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]?  || <usage(&?ROUTINE.WHY)> ] ")" }'
+            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]? || <usage(&?ROUTINE.WHY)> ] ")" }'
         ),
     },
     'func-spec' => {
@@ -202,7 +202,7 @@ for (
         protos => {:rect{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")}},
         DEPARSE => join("\n",
                         '#| rect([<length> | auto]#{4,4})',
-                        'rule rect { :i "rect(" [[<length> || [auto & <keyw> ] ] ** 4% ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
+                        'rule rect { :i "rect(" [[<length> || [auto & <keyw> ] ] ** 4 % ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
                        ),
         rule-refs => ["length"],
     },
@@ -245,7 +245,7 @@ for (
         DEPARSE => join("\n",
                         '#| @font-feature-values <font-family-name># { <declaration-rule-list> }',
                         'rule decl:sym<@font-feature-values> { "\@"<at-rule=.at-rule-font-feature-values>}',
-                        'rule at-rule-font-feature-values { (:i "font-feature-values") <font-family-name> +% <op(",")>? "\{" <declaration-rule-list> "}"  }'
+                        'rule at-rule-font-feature-values { (:i "font-feature-values") <font-family-name> + % <op(",")>? "\{" <declaration-rule-list> "}" }'
                        ),
     },
     'prop-spec' => {
@@ -287,7 +287,7 @@ for (
         DEPARSE => join("\n",
                         '#| min-width: <length> | <percentage> | inherit',
                         'rule decl:sym<min-width> { :i ("min-width") ":" <val(/<prop-val-min-width> /, &?ROUTINE.WHY)>}',
-                        'rule prop-val-min-width { :i <length> || <percentage> || [inherit & <keyw> ]  }',
+                        'rule prop-val-min-width { :i <length> || <percentage> || [inherit & <keyw> ] }',
                        ),
     },
     'prop-spec' => {input => "'content'\tnormal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit\tnormal	:before and :after pseudo-elements	no",
@@ -314,7 +314,7 @@ for (
                         DEPARSE => join("\n",
                                         '#| content: normal | none | [ <string> | <uri> | <counter> | attr(<identifier>) | open-quote | close-quote | no-open-quote | no-close-quote ]+ | inherit',
                                         'rule decl:sym<content> { :i (content) ":" <val(/<prop-val-content> /, &?ROUTINE.WHY)>}',
-                                        'rule prop-val-content { :i [normal | none ]& <keyw>  || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw>  ] + || [inherit & <keyw> ]  }',
+                                        'rule prop-val-content { :i [normal | none ]& <keyw> || [<string> || <uri> || <counter> || <attr> || ["open-quote" | "close-quote" | "no-open-quote" | "no-close-quote" ]& <keyw> ] + || [inherit & <keyw> ] }',
                                        ),
 
     },

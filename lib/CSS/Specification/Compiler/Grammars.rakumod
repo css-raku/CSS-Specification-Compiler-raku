@@ -138,7 +138,7 @@ sub op(Str:D $op) { :$op.&compile }
 # <a>#? , <b>  ->  [:!r [<a> +% ','] ',']? <b>
 multi sub compile(:occurs(@)! ( '?', :$trailing! where ',', :occurs(@)! (',', *%term))) {
     my RakuAST::Regex $atom = (|%term).&compile.&group.&ws;
-    my RakuAST::Regex $lhs = $atom.&quantified('+', :separator($trailing.&op));
+    my RakuAST::Regex $lhs = $atom.&quantified('+', :separator($trailing.&op.&ws));
     ['!r'.&modifier, $lhs.&ws, $trailing.&op].&group.&quantified: '?';
 }
 
@@ -315,7 +315,7 @@ multi sub quantified($atom, '!') {
     $atom;
 }
 multi sub quantified($atom, $_, *%opt) {
-    %opt<separator> //= ','.&op.&quantified('?') if .tail ~~ ',';
+    %opt<separator> //= ','.&op.&quantified('?').&ws if .tail ~~ ',';
     my RakuAST::Regex::Quantifier $quantifier = .&quant;
     RakuAST::Regex::QuantifiedAtom.new: :$atom, :$quantifier, |%opt;
 }
