@@ -10,5 +10,6 @@ grammar Test::CSS::Aural::Grammar
     is CSS::Grammar::CSS21
     does Test::CSS::Aural::Spec::External {
 
+    proto rule proforma {*}
     rule proforma:sym<inherit> { <sym> }
 }

@@ -2,8 +2,6 @@ unit role CSS::Specification::Compiler::External;
 
 use CSS::Specification::Compiler::Util;
 
-use experimental :rakuast;
-
 method actions { ... }
 
 method compile-external(@role-id, Str :$scope = 'our') {
@@ -30,11 +28,11 @@ method !interface-methods {
     %unresolved{$_}:delete
         for $.actions.funcs.keys;
 
-    my $parameters = RakuAST::Parameter.new(
+    my @parameters = RakuAST::Parameter.new(
         slurpy => RakuAST::Parameter::Slurpy::Capture
     );
     my RakuAST::Signature $signature .= new(
-        :$parameters
+        :@parameters
     );
 
     my RakuAST::Blockoid $stub .= new(

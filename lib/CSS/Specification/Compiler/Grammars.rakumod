@@ -2,8 +2,6 @@ unit role CSS::Specification::Compiler::Grammars;
 
 use CSS::Specification::Compiler::Util;
 
-use experimental :rakuast;
-
 method actions { ... }
 method defs { ... }
 
@@ -34,6 +32,7 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
             RakuAST::Regex::CapturingGroup.new(
                 $sym.&lit.&seq
             ).&ws,
+
             RakuAST::Regex::Quote.new(
                 RakuAST::QuotedString.new(
                     segments   => (
@@ -41,6 +40,7 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
                     )
                 )
             ).&ws,
+
             RakuAST::Regex::Assertion::Named::Args.new(
                 name      => 'val'.&name,
                 args      => RakuAST::ArgList.new(
@@ -57,8 +57,7 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
 
 sub at-rule-decl(Str:D $sym, Str:D :$base-val!) {
     my RakuAST::Name $rule-name = "decl:sym<\@$sym>".&name;
-    my RakuAST::Name $name = $base-val.&name;
-    my RakuAST::Regex::Assertion::Named $assertion .= new: :$name;
+    my RakuAST::Regex::Assertion::Named $assertion = $base-val.&assertion(:!capturing);
     my $rule-body = ('@'.&lit,
                      RakuAST::Regex::Assertion::Alias.new(
                          :name<at-rule>, :$assertion
@@ -195,8 +194,17 @@ multi sub arg(Int:D $arg) {
     RakuAST::ArgList.new: RakuAST::IntLiteral.new($arg);
 }
 
-multi sub ws(RakuAST::Regex::WithWhitespace $w) is export { $w }
-multi sub ws(RakuAST::Regex $r) is export { RakuAST::Regex::WithWhitespace.new($r) }
+multi sub whitespaced(RakuAST::Regex::WithWhitespace) { True }
+multi sub whitespaced(RakuAST::Regex::Sequence $_ )   { .terms.tail.&whitespaced }
+multi sub whitespaced(RakuAST::Regex::Branching $_)   { .branches.tail.&whitespaced }
+multi sub whitespaced($) { False }
+
+proto sub ws($) is export {*}
+multi sub ws(RakuAST::Regex $w where .&whitespaced) { $w }
+multi sub ws(RakuAST::Regex::Term $r) { RakuAST::Regex::WithWhitespace.new($r) }
+multi sub ws(RakuAST::Regex $r) {
+    $r.&group.&ws;
+}
 
 sub lit(Str:D $s) is export { RakuAST::Regex::Literal.new($s) }
 
@@ -211,7 +219,9 @@ sub alt(@choices) is export {
     RakuAST::Regex::Alternation.new: |@choices;
 }
 
-multi sub seq(@seq, :alt($)! where .so) is export  { RakuAST::Regex::SequentialAlternation.new: |@seq }
+multi sub seq(@seq, :alt($)! where .so) {
+    RakuAST::Regex::SequentialAlternation.new: |@seq
+}
 multi sub seq(@seq) {
     RakuAST::Regex::Sequence.new(|@seq);
 }
@@ -357,6 +367,8 @@ multi sub compile(:%signature! ( :@args! is copy ) ) {
         @seq.push: .&compile.&ws;
     }
     if @optional {
+        # expand shorthand for optional trailing parameters: 
+        # a, b?, c? ... -> a [',' b [',' c ... ]? ]?
         my $opt := [','.&lit-ws, @optional.pop.&compile.&ws].&group.&quantified('?').&ws;
         while @optional {
             $opt := [','.&lit-ws, (@optional.pop.&compile.&ws, $opt).&seq].&group.&quantified('?').&ws;
@@ -397,9 +409,9 @@ method compile-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
     my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
     my @compiled = flat @.defs.map: { my $*VAR = 'A'; .&compile};
     my RakuAST::StatementList $statements .= new: |@compiled;
+    my RakuAST::Blockoid $block .= new: $statements;
 
     if $role {
-        my RakuAST::Blockoid $block .= new: $statements;
         my RakuAST::RoleBody $body  .= new: :body($block);
         RakuAST::Role.new(
             :$name,
@@ -408,7 +420,7 @@ method compile-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
         );
     }
     else {
-        my RakuAST::Block $body .= new: :body(RakuAST::Blockoid.new: $statements);
+        my RakuAST::Block $body .= new: :body($block);
 
         RakuAST::Grammar.new(
             :$name,

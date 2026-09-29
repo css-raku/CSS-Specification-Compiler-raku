@@ -2,19 +2,18 @@ unit role CSS::Specification::Compiler::Actions;
 
 use CSS::Specification::Compiler::Util;
 
-use experimental :rakuast;
-
 method actions { ... }
 method defs { ... }
 
 method compile-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
     my RakuAST::Method @methods = self!actions-methods;
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
-    my RakuAST::Blockoid $body .= new: @expressions.&statements;
+    my RakuAST::StatementList $statements = @expressions.&statements;
+    my RakuAST::Blockoid $body .= new: $statements;
     my RakuAST::Name $name .= from-identifier-parts(|@actions-id);
     $role
         ?? RakuAST::Role.new( :$name, :body(RakuAST::RoleBody.new: :$body), :$scope)
-        !! RakuAST::Class.new(:$name, :$body, :$scope );
+        !! RakuAST::Class.new(:$name, :body(RakuAST::Block.new: :$body), :$scope );
 }
 
 method link-actions(@group-id, @modules, Str :$scope = 'our') {
@@ -93,7 +92,7 @@ method !actions-methods {
     my RakuAST::Method @methods;
 
     my RakuAST::Signature $signature .= new(
-        :parameters( '$/'.&param )
+        :parameters[ '$/'.&param ]
     );
 
     my $val-body  = 'list'.&compile-action;

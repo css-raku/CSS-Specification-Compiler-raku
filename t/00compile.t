@@ -15,7 +15,7 @@ sub tidy($_) {
     .subst: /\s+/, ' ', :g
 }
 
-lives-ok {require CSS::Grammar:ver(v0.3.0..*) }, "CSS::Grammar version";
+lives-ok {require CSS::Grammar:ver(v0.4.0+) }, "CSS::Grammar version";
 
 for (
     'values' => {
@@ -41,7 +41,7 @@ for (
     'values' => {
         input => '35 | 7 | 42?',
         ast => :alt[:numbers[35, 7], :occurs["?", :num(42)]],
-        DEPARSE => '[35 | 7 ]& <number> || [42 & <number>] ?',
+        DEPARSE => '[[35 | 7 ]& <number>] || [42 & <number>] ?',
     },
     'values' => {
         input => '<a> | !<b> | <c> | !<d>',
@@ -192,7 +192,7 @@ for (
         DEPARSE => join(
             "\n",
             '#| example(a, b, c?, d?)',
-            'rule example { :i "example(" [[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]? || <usage(&?ROUTINE.WHY)> ] ")" }'
+            'rule example { [:i "example(" [[[a & <keyw> ] "," [b & <keyw> ] ["," [c & <keyw> ] ["," [d & <keyw> ] ]? ]? || <usage(&?ROUTINE.WHY)>] ] ")"] }'
         ),
     },
     'func-spec' => {
@@ -202,7 +202,7 @@ for (
         protos => {:rect{:func<rect>, :signature{:occurs[[4, 4, ","], :group(:alt[:rule<length>, :keyw<auto>])]}, :synopsis("rect([<length> | auto]#\{4,4})")}},
         DEPARSE => join("\n",
                         '#| rect([<length> | auto]#{4,4})',
-                        'rule rect { :i "rect(" [[<length> || [auto & <keyw> ] ] ** 4 % ","? || <usage(&?ROUTINE.WHY)> ] ")" }',
+                        'rule rect { [:i "rect(" [[[<length> || [auto & <keyw> ] ] ** 4 % ","? || <usage(&?ROUTINE.WHY)>] ] ")"] }',
                        ),
         rule-refs => ["length"],
     },
@@ -227,7 +227,7 @@ for (
         rule-refs => ['counter-name'],
         DEPARSE => join("\n",
                         q<#| reversed( <counter-name> )>,
-                        q<rule reversed-counter-name { :i "reversed(" [<counter-name> || <usage(&?ROUTINE.WHY)> ] ")" }>
+                        q<rule reversed-counter-name { [:i "reversed(" [[<counter-name> || <usage(&?ROUTINE.WHY)>] ] ")"] }>
                        ),
     },
     'at-rule-spec' => {

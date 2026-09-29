@@ -9,5 +9,5 @@ class Test::CSS::Aural::Actions
     is CSS::Specification::Base::Actions
     is CSS::Grammar::Actions {
 
-    method proforma:sym<inherit>($/) { make {'keyw' => ~$<sym>} }
+    method proforma:sym<inherit>($/) { make 'keyw' => $/.trim.lc }
 }
