@@ -80,7 +80,7 @@ sub find-child-props($rule-name, :%child-rules!, :%child-props!, :%seen = %()) {
 sub remove-child(%meta, $prop) {
     with %meta<children> {
         if .grep: {$_ ne $prop} -> @children {
-            $_= @children;
+            $_ = @children;
         }
         else {
             %meta<children>:delete;
