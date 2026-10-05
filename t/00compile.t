@@ -9,7 +9,6 @@ use CSS::Specification::Actions;
 use CSS::Specification::Compiler;
 use CSS::Specification::Compiler::Actions;
 use CSS::Specification::Compiler::Grammars :&compile;
-use experimental :rakuast;
 
 sub tidy($_) {
     .subst: /\s+/, ' ', :g

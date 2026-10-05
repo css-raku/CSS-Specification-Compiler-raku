@@ -4,7 +4,6 @@ use CSS::Grammar::CSS21;
 use CSS::Specification::Compiler;
 use JSON::Fast;
 use lib 't';
-use experimental :rakuast;
 
 my @base-id = qw<Test CSS Aural Spec>;
 my @actions-id = @base-id.Slip, 'Actions';

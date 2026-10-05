@@ -54,9 +54,9 @@ method make-module($where, $meta-root, @sources, :%inherit, :$link) {
         %props.&write-metadata($meta-root);
 
         if $link {
-            my @actions-link-id = flat @group-id, 'Actions';
-            my @grammar-link-id = flat @group-id, 'Grammar';
-            my @external-link-id = flat @group-id, 'External';
+            my @actions-link-id = flat @group-id, 'Link', 'Actions';
+            my @grammar-link-id = flat @group-id, 'Link', 'Grammar';
+            my @external-link-id = flat @group-id, 'Link', 'External';
             # my @use-ids = @module-ids.map: { .Slip, 'Actions' }
             # RakuAST version nyi (Raku v2026.05)
             # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
