@@ -4,6 +4,9 @@ use CSS::Specification::Compiler :&build-metadata;
 
 use NativeCall;
 
+has Array @!made;
+has Str   @!root-id;
+
 sub path(RakuAST::Package $p) {
     $p.name.parts>>.name.join: '/';
 }
@@ -12,15 +15,15 @@ method make-module($where, $meta-root, @sources, :%inherit, :$link) {
     my %props;
 
     indir $where, {
-        my Array @base-ids;
+        @!made = ();
+        @!root-id = $meta-root.split('::');
         my %seen;
 
-        my @group-id = $meta-root.split('::');
         note "Building $meta-root";
 
         for @sources {
             my ($class-path, $files) = .isa(Pair) ?? .kv !! ([], $_);
-            my @base-id = flat @group-id, @$class-path, <Gen>;
+            my @base-id = flat @!root-id, @$class-path, <Gen>;
             my @grammar-id = @base-id.Slip, 'Grammar';
             my $scope := 'unit';
             my @defs;
@@ -46,29 +49,29 @@ method make-module($where, $meta-root, @sources, :%inherit, :$link) {
             my %child-props = $compiler.child-props;
             my %meta = @defs.&build-metadata(:%child-rules, :%child-props);
             %props{.key} //= .value for %meta.pairs;
-            @base-ids.push: @base-id;
+            @!made.push: @base-id;
         }
 
         %props{.key} //= .value for %inherit.pairs;
 
         %props.&write-metadata($meta-root);
-
-        if $link {
-            my @actions-link-id = flat @group-id, 'Link', 'Actions';
-            my @grammar-link-id = flat @group-id, 'Link', 'Grammar';
-            my @external-link-id = flat @group-id, 'Link', 'External';
-            # my @use-ids = @module-ids.map: { .Slip, 'Actions' }
-            # RakuAST version nyi (Raku v2026.05)
-            # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
-            # "lib/{$actions-package.&path}.rakumod".IO.spurt: $actions-package.DEPARSE;
-            ("lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt:  link-actions(@actions-link-id, @base-ids);
-            ("lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt:  link-grammar(@grammar-link-id, @base-ids);
-            ("lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @base-ids);
-        }
     }
     %props;
 }
 
+
+method link() {
+    my @actions-link-id  = flat @!root-id, 'Link', 'Actions';
+    my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
+    my @external-link-id = flat @!root-id, 'Link', 'External';
+    # my @use-ids = @module-ids.map: { .Slip, 'Actions' }
+    # RakuAST version nyi (Raku v2026.05)
+    # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
+    # "lib/{$actions-package.&path}.rakumod".IO.spurt: $actions-package.DEPARSE;
+    ("lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
+    ("lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
+    ("lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
+}
 
 # Non-RakuAST implementations
 sub link-actions(@group-id, @modules) {

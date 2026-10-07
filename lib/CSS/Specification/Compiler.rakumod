@@ -96,7 +96,8 @@ multi sub is-parent-name($_, $parent) {
 
 sub find-edges(%props, :%child-rules!, :%child-props!) {
     # match boxed properties with children
-    for %props.kv -> $key, $value {
+    for %props.keys.sort -> $key {
+        my $value = %props{$key};
         unless $key ~~ / '-'[top|right|bottom|left]<?before ['-'|$$]> / {
             # see if the property has any children
             for <top right bottom left> -> $side {

@@ -1,7 +1,5 @@
 unit module CSS::Specification::Compiler::Util;
 
-use experimental :rakuast;
-
 sub name(Str:D $id) is export {  RakuAST::Name.from-identifier($id) }
 
 sub param(Str:D $name) is export {
