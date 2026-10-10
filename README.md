@@ -33,15 +33,8 @@ mkdir 'resources';
 Description
 -----------
 This module is used to compile sets of [CSS property definitions](https://www.w3.org/TR/css-values-3/)
-to Raku Grammars, Actions, External references, and to extract Metadata.
+to RakuAST Grammars, Actions, and External references, and to extract Metadata.
 
 [CSS::Module](https://raku.land/zef:dwarring/CSS::Module), or similar, can then be used to bundle
 the definitions for use by [CSS::Properties](https://raku.land/zef:dwarring/CSS::Properties) and
 other downstream CSS related modules.
-
-Status
-------
-This module may be subject to change. It uses RakuAST API, which is classed as experimental.
-The current version was most recently tested against Rakudo 2026.05
-
-It has been used to transpile property value definitions to Raku for recent CSS::Module releases.
