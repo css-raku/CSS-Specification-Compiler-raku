@@ -25,8 +25,7 @@ for (True, False) -> $role {
     subtest ($role ?? 'with roles' !! 'without roles'), {
         temp @grammar-id.tail ~= 'Role' if $role;
         my RakuAST::Package $grammar = $compiler.compile-grammar(@grammar-id, :$role);
-        "t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE
-        .subst(/";\n;"/, ';', :g); # work-around for https://github.com/rakudo/rakudo/issues/5991
+        "t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE;
         my $grammar-name = @grammar-id.join: '::';
         lives-ok {require ::($grammar-name)}, "$grammar-name compilation";
 
