@@ -2,60 +2,22 @@ use Test;
 use CSS::Grammar::Test;
 use CSS::Grammar::CSS21;
 use CSS::Specification::Compiler;
+use CSS::Specification::Compiler::Make;
 use JSON::Fast;
 use lib 't';
 
-my @base-id = qw<Test CSS Aural Spec>;
-my @actions-id = @base-id.Slip, 'Actions';
-my @external-id = @base-id.Slip, 'External';
-my @grammar-id = @base-id.Slip, 'Grammar';
-
 my $file = $*SPEC.catfile('examples', 'css21-aural.tsv');
 
-my CSS::Specification::Compiler $compiler .= new;
-$compiler.load-defs(:$file);
-
-sub name(RakuAST::Package $p, $j) {
-    $p.name.parts>>.name.join: $j
-}
-
-is +$compiler.defs, 24, 'number of summary items';
-
-for (True, False) -> $role {
-    subtest ($role ?? 'with roles' !! 'without roles'), {
-        temp @grammar-id.tail ~= 'Role' if $role;
-        my RakuAST::Package $grammar = $compiler.compile-grammar(@grammar-id, :$role);
-        "t/lib/{$grammar.&name('/')}.rakumod".IO.spurt: $grammar.DEPARSE;
-        my $grammar-name = @grammar-id.join: '::';
-        lives-ok {require ::($grammar-name)}, "$grammar-name compilation";
-
-        temp @actions-id.tail ~= 'Role' if $role;
-        my RakuAST::Package $actions-pkg = $compiler.compile-actions(@actions-id, :$role);
-        "t/lib/{$actions-pkg.&name('/')}.rakumod".IO.spurt: $actions-pkg.DEPARSE;
-        my $actions-name = @actions-id.join: '::';
-        lives-ok {require ::($actions-name)}, "$actions-name compilation";
-
-    }
-}
-
-my RakuAST::Package $interface-pkg = $compiler.compile-external(@external-id);
-"t/lib/{$interface-pkg.&name('/')}.rakumod".IO.spurt: $interface-pkg.DEPARSE;
-
-# todo: metadata tests
-('t', 'lib', @base-id.Slip, "Metadata.rakumod").join('/').IO.spurt: $compiler.metadata.&to-json(:sorted-keys);
-
-my $external-name = @external-id.join: '::';
-lives-ok {require ::($external-name)}, "$external-name compilation";
-
-dies-ok {require ::("Test::CSS::Aural::BadGrammar")}, 'grammar composition, unimplemented interface - dies';
-
-my $aural-class;
-lives-ok {$aural-class = (require ::("Test::CSS::Aural::Grammar"))}, 'grammar composition - lives';
-isa-ok $aural-class, CSS::Grammar::CSS21;
+my CSS::Specification::Compiler::Make $maker .= new;
+$maker.make-module('.', "Test::CSS::Aural", ($file,), :lib<t/lib> );
 
 my $actions;
 lives-ok {$actions = (require ::("Test::CSS::Aural::Actions")).new}, 'class composition - lives';
 ok $actions.defined, '::("Test::CSS::Aural::Actions").new';
+
+my $aural-class;
+lives-ok {$aural-class = (require ::("Test::CSS::Aural::Grammar"))}, 'grammar composition - lives';
+isa-ok $aural-class, CSS::Grammar::CSS21;
 
 for ('.aural-test { stress: 42; speech-rate: fast; volume: inherit; voice-family: female; }' =>
      ast => :stylesheet[

@@ -11,15 +11,15 @@ sub path(RakuAST::Package $p) {
     $p.name.parts>>.name.join: '/';
 }
 
-method make-module($where, $meta-root, @sources, :%inherit, :$link) {
+method make-module($where, $namespace, @sources, :%inherit, :$lib = 'lib') {
     my %props;
 
     indir $where, {
         @!made = ();
-        @!root-id = $meta-root.split('::');
+        @!root-id = $namespace.split('::');
         my %seen;
 
-        note "Building $meta-root";
+        note "Building $namespace";
 
         for @sources {
             my ($class-path, $files) = .isa(Pair) ?? .kv !! ([], $_);
@@ -33,17 +33,17 @@ method make-module($where, $meta-root, @sources, :%inherit, :$link) {
                 @defs.append: $compiler.load-defs(:$file);
             }
 
-            mkdir 'lib/' ~ @base-id.join('/');
+            mkdir join('/', flat $lib, @base-id.join);
             my RakuAST::Package $grammar-ast = $compiler.compile-grammar(@grammar-id, :$scope);
-            "lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
+            "$lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
 
             my @actions-id = @base-id.Slip, 'Actions';
             my RakuAST::Package $actions-ast = $compiler.compile-actions(@actions-id, :$scope);
-            "lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
+            "$lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
 
             my @external-id = @base-id.Slip, 'External';
             my RakuAST::Package $external-ast = $compiler.compile-external(@external-id, :$scope);
-            "lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
+            "$lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
 
             my %child-rules = $compiler.child-rules;
             my %child-props = $compiler.child-props;
@@ -54,13 +54,13 @@ method make-module($where, $meta-root, @sources, :%inherit, :$link) {
 
         %props{.key} //= .value for %inherit.pairs;
 
-        %props.&write-metadata($meta-root);
+        %props.&write-metadata($namespace, :$lib);
     }
     %props;
 }
 
 
-method link() {
+method link(:$lib = 'lib') {
     my @actions-link-id  = flat @!root-id, 'Link', 'Actions';
     my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
     my @external-link-id = flat @!root-id, 'Link', 'External';
@@ -68,9 +68,9 @@ method link() {
     # RakuAST version nyi (Raku v2026.05)
     # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
     # "lib/{$actions-package.&path}.rakumod".IO.spurt: $actions-package.DEPARSE;
-    ("lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
-    ("lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
-    ("lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
+    ("$lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
+    ("$lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
+    ("$lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
 }
 
 # Non-RakuAST implementations
@@ -107,8 +107,9 @@ sub link-external(@group-id, @modules) {
     @lines.join("\n") ~ "\n";
 }
 
-sub write-metadata(%props, $meta) {
-    my $class-dir = $*SPEC.catdir(<lib>, $meta.split('::').Slip);
+sub write-metadata(%props, $meta, :$lib = 'lib') {
+    my $class-dir = $*SPEC.catdir($lib, $meta.split('::').Slip);
+    dd :$class-dir;
     my $class-path = $*SPEC.catfile( $class-dir, 'Metadata.rakumod' );
     my $class-name = "{$meta}::Metadata";
     {
