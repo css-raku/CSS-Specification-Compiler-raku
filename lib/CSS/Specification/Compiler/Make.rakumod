@@ -33,7 +33,7 @@ method make-module($where, $namespace, @sources, :%inherit, :$lib = 'lib') {
                 @defs.append: $compiler.load-defs(:$file);
             }
 
-            mkdir join('/', flat $lib, @base-id.join);
+            mkdir join('/', flat $lib, @base-id);
             my RakuAST::Package $grammar-ast = $compiler.compile-grammar(@grammar-id, :$scope);
             "$lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
 
@@ -109,7 +109,6 @@ sub link-external(@group-id, @modules) {
 
 sub write-metadata(%props, $meta, :$lib = 'lib') {
     my $class-dir = $*SPEC.catdir($lib, $meta.split('::').Slip);
-    dd :$class-dir;
     my $class-path = $*SPEC.catfile( $class-dir, 'Metadata.rakumod' );
     my $class-name = "{$meta}::Metadata";
     {

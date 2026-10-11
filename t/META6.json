@@ -6,6 +6,9 @@
   "provides": {
       "Test::CSS::Aural::Actions": "lib/Test/CSS/Aural/Actions.rakumod",
       "Test::CSS::Aural::Grammar": "lib/Test/CSS/Aural/Grammar.rakumod",
+      "Test::CSS::Aural::Link::Actions": "lib/Test/CSS/Aural/Link/Actions.rakumod",
+      "Test::CSS::Aural::Link::Grammar": "lib/Test/CSS/Aural/Link/Grammar.rakumod",
+      "Test::CSS::Aural::Link::External": "lib/Test/CSS/Aural/Link/External.rakumod",
       "Test::CSS::Aural::Gen::Actions": "lib/Test/CSS/Aural/Gen/Actions.rakumod",
       "Test::CSS::Aural::Gen::Grammar": "lib/Test/CSS/Aural/Gen/Grammar.rakumod",
       "Test::CSS::Aural::Gen::External": "lib/Test/CSS/Aural/Gen/External.rakumod",
