@@ -73,8 +73,7 @@ method link {
 
 sub link-actions(@group-id, @modules) {
     my RakuAST::Name $name .= from-identifier-parts(|@group-id);
-    my RakuAST::Statement @compiled = @modules.map: {
-        my @module = .List;
+    my RakuAST::Statement @compiled = @modules.map: -> @module is copy {
         @module.append: 'Actions';
         my RakuAST::Name $module-name .= from-identifier-parts(|@module);
         my $type = RakuAST::Type::Simple.from-identifier-parts(|@module);
