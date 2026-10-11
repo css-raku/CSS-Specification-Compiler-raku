@@ -66,24 +66,36 @@ method link {
     my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
     my @external-link-id = flat @!root-id, 'Link', 'External';
     # my @use-ids = @module-ids.map: { .Slip, 'Actions' }
-    # RakuAST version nyi (Raku v2026.05)
-    # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
-    # "lib/{$actions-package.&path}.rakumod".IO.spurt: $actions-package.DEPARSE;
-    ("$!lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
+    ("$!lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made).DEPARSE;
     ("$!lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
     ("$!lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
 }
 
-# Non-RakuAST implementations
 sub link-actions(@group-id, @modules) {
-    my @lines = 'unit class ' ~  @group-id.join('::') ~ ';';
-    @lines.push: '';
-    for @modules {
-        my $name = (.Slip, 'Actions').join('::');
-        @lines.push: "use {$name};";
-        @lines.push: "also is {$name};";
-    }
-    @lines.push('').join: "\n";
+    my RakuAST::Name $name .= from-identifier-parts(|@group-id);
+    my RakuAST::Statement @compiled = @modules.map: {
+        my @module = .List;
+        @module.append: 'Actions';
+        my RakuAST::Name $module-name .= from-identifier-parts(|@module);
+        my $type = RakuAST::Type::Simple.from-identifier-parts(|@module);
+        my @traits = RakuAST::Trait::Is.new(
+            :$type,
+        );
+        slip RakuAST::Statement::Use.new(
+              :$module-name
+        ), RakuAST::Statement::Also.new(
+              :@traits,
+        );
+    };
+    my RakuAST::StatementList $statements .= new: |@compiled;
+    my RakuAST::Blockoid $block .= new: $statements;
+    my RakuAST::Block $body .= new: :body($block);
+
+    RakuAST::Class.new(
+        :$name,
+        :$body,
+        :scope<unit>,
+    );
 }
 
 sub link-grammar(@group-id, @modules) {
