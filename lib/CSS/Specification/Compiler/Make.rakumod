@@ -65,9 +65,9 @@ method link {
     my @actions-link-id  = flat @!root-id, 'Link', 'Actions';
     my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
     my @external-link-id = flat @!root-id, 'Link', 'External';
-    ("$!lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: @!made.&link(@actions-link-id).DEPARSE;
-    ("$!lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: @!made.&link(@grammar-link-id).DEPARSE;
-    ("$!lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
+    ("$!lib/" ~ @actions-link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@actions-link-id).DEPARSE;
+    ("$!lib/" ~ @grammar-link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@grammar-link-id).DEPARSE;
+    ("$!lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: @!made.&link(@external-link-id).DEPARSE;
 }
 
 sub link(@modules, @base-id) {
@@ -77,9 +77,9 @@ sub link(@modules, @base-id) {
         @module.append: $link-type;
         my RakuAST::Name $module-name  .= from-identifier-parts(|@module);
         my RakuAST::Type::Simple $type .= from-identifier-parts(|@module);
-        my @traits = RakuAST::Trait::Is.new(
-            :$type,
-        );
+        my RakuAST::Trait @traits = $link-type eq 'External'
+            ?? RakuAST::Trait::Does.new($type)
+            !! RakuAST::Trait::Is.new(:$type);
         slip RakuAST::Statement::Use.new(
               :$module-name
         ), RakuAST::Statement::Also.new(
@@ -88,7 +88,8 @@ sub link(@modules, @base-id) {
     };
     my RakuAST::StatementList $statements .= new: |@compiled;
     my RakuAST::Blockoid $block .= new: $statements;
-    my RakuAST::Block $body .= new: :body($block);
+    my $body-type =  $link-type eq 'External' ?? RakuAST::RoleBody !! RakuAST::Block;
+    my $body = $body-type.new: :body($block);
 
     my $module-type = %(
         :Actions(RakuAST::Class),
@@ -101,17 +102,6 @@ sub link(@modules, @base-id) {
         :$body,
         :scope<unit>,
     );
-}
-
-sub link-external(@group-id, @modules) {
-    my @lines = 'unit role ' ~  @group-id.join('::') ~ ';';
-    @lines.push: '';
-    for @modules {
-        my $name = (.Slip, 'External').join('::');
-        @lines.push: "use {$name};";
-        @lines.push: "also does {$name};";
-    }
-    @lines.join("\n") ~ "\n";
 }
 
 sub write-metadata(%props, $meta, :$lib = 'lib') {
