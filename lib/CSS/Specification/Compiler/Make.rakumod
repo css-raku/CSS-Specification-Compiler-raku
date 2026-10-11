@@ -62,12 +62,10 @@ method make-module($where, $namespace, @sources, :%inherit, :$!lib) {
 
 
 method link {
-    my @actions-link-id  = flat @!root-id, 'Link', 'Actions';
-    my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
-    my @external-link-id = flat @!root-id, 'Link', 'External';
-    ("$!lib/" ~ @actions-link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@actions-link-id).DEPARSE;
-    ("$!lib/" ~ @grammar-link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@grammar-link-id).DEPARSE;
-    ("$!lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: @!made.&link(@external-link-id).DEPARSE;
+    for <Actions Grammar External> -> $link-type {
+        my @link-id  = flat @!root-id, 'Link', $link-type;
+        ("$!lib/" ~ @link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@link-id).DEPARSE;
+    }
 }
 
 sub link(@modules, @base-id) {
