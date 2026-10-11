@@ -8,9 +8,11 @@ use lib 't';
 
 my $file = $*SPEC.catfile('examples', 'css21-aural.tsv');
 
-my CSS::Specification::Compiler::Make $maker .= new;
-$maker.make-module: '.', "Test::CSS::Aural", ($file,), :lib<t/lib>;
-$maker.link: :lib<t/lib>;
+lives-ok {
+    my CSS::Specification::Compiler::Make $maker .= new;
+    $maker.make-module: '.', "Test::CSS::Aural", ($file,), :lib<t/lib>;
+    $maker.link;
+}, 'make';
 
 my $actions;
 lives-ok {$actions = (require ::("Test::CSS::Aural::Actions")).new}, 'class composition - lives';

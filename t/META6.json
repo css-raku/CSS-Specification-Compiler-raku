@@ -17,6 +17,6 @@
       "Test::CSS::Aural::Gen::GrammarRole": "lib/Test/CSS/Aural/Gen/GrammarRole.rakumod",
       "Test::CSS::Aural::Gen::External": "lib/Test/CSS/Aural/Gen/External.rakumod"
   },
-  "source-url": "git://github.com/p6-css/CSS-Specification-p6.git",
+  "source-url": "https://github.com/css-raku/CSS-Specification-Compiler-raku.git",
   "version": "0.0.1"
 }

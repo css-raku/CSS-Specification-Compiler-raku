@@ -6,12 +6,13 @@ use NativeCall;
 
 has Array @!made;
 has Str   @!root-id;
+has Str   $!lib = 'lib';
 
 sub path(RakuAST::Package $p) {
     $p.name.parts>>.name.join: '/';
 }
 
-method make-module($where, $namespace, @sources, :%inherit, :$lib = 'lib') {
+method make-module($where, $namespace, @sources, :%inherit, :$!lib) {
     my %props;
 
     indir $where, {
@@ -33,17 +34,17 @@ method make-module($where, $namespace, @sources, :%inherit, :$lib = 'lib') {
                 @defs.append: $compiler.load-defs(:$file);
             }
 
-            mkdir join('/', flat $lib, @base-id);
+            mkdir join('/', flat $!lib, @base-id);
             my RakuAST::Package $grammar-ast = $compiler.compile-grammar(@grammar-id, :$scope);
-            "$lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
+            "$!lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
 
             my @actions-id = @base-id.Slip, 'Actions';
             my RakuAST::Package $actions-ast = $compiler.compile-actions(@actions-id, :$scope);
-            "$lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
+            "$!lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
 
             my @external-id = @base-id.Slip, 'External';
             my RakuAST::Package $external-ast = $compiler.compile-external(@external-id, :$scope);
-            "$lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
+            "$!lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
 
             my %child-rules = $compiler.child-rules;
             my %child-props = $compiler.child-props;
@@ -54,13 +55,13 @@ method make-module($where, $namespace, @sources, :%inherit, :$lib = 'lib') {
 
         %props{.key} //= .value for %inherit.pairs;
 
-        %props.&write-metadata($namespace, :$lib);
+        %props.&write-metadata($namespace, :$!lib);
     }
     %props;
 }
 
 
-method link(:$lib = 'lib') {
+method link {
     my @actions-link-id  = flat @!root-id, 'Link', 'Actions';
     my @grammar-link-id  = flat @!root-id, 'Link', 'Grammar';
     my @external-link-id = flat @!root-id, 'Link', 'External';
@@ -68,9 +69,9 @@ method link(:$lib = 'lib') {
     # RakuAST version nyi (Raku v2026.05)
     # my RakuAST::Package $actions-package = CSS::Specification::Compiler.link-actions(@actions-link-id, @module-ids);
     # "lib/{$actions-package.&path}.rakumod".IO.spurt: $actions-package.DEPARSE;
-    ("$lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
-    ("$lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
-    ("$lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
+    ("$!lib/" ~ @actions-link-id.join('/') ~ ".rakumod").IO.spurt: link-actions(@actions-link-id, @!made);
+    ("$!lib/" ~ @grammar-link-id.join('/') ~ ".rakumod").IO.spurt: link-grammar(@grammar-link-id, @!made);
+    ("$!lib/" ~ @external-link-id.join('/') ~ ".rakumod").IO.spurt: link-external(@external-link-id, @!made);
 }
 
 # Non-RakuAST implementations
