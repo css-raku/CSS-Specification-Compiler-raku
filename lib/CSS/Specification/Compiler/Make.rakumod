@@ -12,7 +12,8 @@ sub path(RakuAST::Package $p) {
     $p.name.parts>>.name.join: '/';
 }
 
-method make-module($where, $namespace, @sources, :%inherit, :$!lib) {
+method make-module($where, $namespace, @sources, :%inherit, Str :$lib) {
+    $!lib = $_ with $lib;
     my %props;
 
     indir $where, {
@@ -63,7 +64,7 @@ method make-module($where, $namespace, @sources, :%inherit, :$!lib) {
 
 method link {
     for <Actions Grammar External> -> $link-type {
-        my @link-id  = flat @!root-id, 'Link', $link-type;
+        my @link-id = flat @!root-id, 'Link', $link-type;
         ("$!lib/" ~ @link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@link-id).DEPARSE;
     }
 }
@@ -78,12 +79,13 @@ sub link(@modules, @base-id) {
         my RakuAST::Trait @traits = $link-type eq 'External'
             ?? RakuAST::Trait::Does.new($type)
             !! RakuAST::Trait::Is.new(:$type);
+
         slip RakuAST::Statement::Use.new(
               :$module-name
         ), RakuAST::Statement::Also.new(
               :@traits,
         );
-    };
+    }
     my RakuAST::StatementList $statements .= new: |@compiled;
     my RakuAST::Blockoid $block .= new: $statements;
     my $body-type =  $link-type eq 'External' ?? RakuAST::RoleBody !! RakuAST::Block;
