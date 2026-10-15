@@ -6,11 +6,12 @@ use CSS::Specification::Compiler::Make;
 use JSON::Fast;
 use lib 't';
 
-my $file = $*SPEC.catfile('examples', 'css21-aural.tsv');
+my $main-src = $*SPEC.catfile('examples', 'css21-aural.tsv');
+my $Border = $*SPEC.catfile('examples', 'css21-border-example.tsv');
 
 lives-ok {
     my CSS::Specification::Compiler::Make $maker .= new;
-    $maker.make-module: '.', "Test::CSS::Aural", ($file,), :lib<t/lib>;
+    $maker.make-module: '.', "Test::CSS::Aural", ($main-src, :$Border), :lib<t/lib>;
     $maker.link;
 }, 'make';
 

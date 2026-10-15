@@ -2,9 +2,6 @@ unit role Test::CSS::Aural::Gen::External;
 method angle (|) {
     ...
 }
-method color (|) {
-    ...
-}
 method frequency (|) {
     ...
 }

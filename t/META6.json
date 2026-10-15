@@ -14,8 +14,9 @@
       "Test::CSS::Aural::Gen::Grammar": "lib/Test/CSS/Aural/Gen/Grammar.rakumod",
       "Test::CSS::Aural::Gen::External": "lib/Test/CSS/Aural/Gen/External.rakumod",
       "Test::CSS::Aural::Gen::ActionsRole": "lib/Test/CSS/Aural/Gen/ActionsRole.rakumod",
-      "Test::CSS::Aural::Gen::GrammarRole": "lib/Test/CSS/Aural/Gen/GrammarRole.rakumod",
-      "Test::CSS::Aural::Gen::External": "lib/Test/CSS/Aural/Gen/External.rakumod"
+      "Test::CSS::Aural::Border::Gen::Actions": "lib/Test/CSS/Aural/Border/Gen/Actions.rakumod",
+      "Test::CSS::Aural::Border::Gen::Grammar": "lib/Test/CSS/Aural/Border/Gen/Grammar.rakumod",
+      "Test::CSS::Aural::Border::Gen::External": "lib/Test/CSS/Aural/Border/Gen/External.rakumod"
   },
   "source-url": "https://github.com/css-raku/CSS-Specification-Compiler-raku.git",
   "version": "0.0.1"
