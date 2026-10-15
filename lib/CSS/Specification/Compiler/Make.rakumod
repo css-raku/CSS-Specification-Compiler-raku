@@ -19,31 +19,37 @@ method make-module($where, $namespace, @sources, :%inherit, Str :$lib) {
     indir $where, {
         @!made = ();
         @!root-id = $namespace.split('::');
-        my %seen;
+        my %seen-file;
+        my %seen-module;
 
         note "Building $namespace";
 
         for @sources {
-            my ($class-path, $files) = .isa(Pair) ?? .kv !! ([], $_);
-            my @base-id = flat @!root-id, @$class-path, <Gen>;
-            my @grammar-id = @base-id.Slip, 'Grammar';
+            my ($submodule-path, $files) = .isa(Pair) ?? .kv !! ([], $_);
+            my @submodule-id = flat @!root-id, @$submodule-path, <Gen>;
             my $scope := 'unit';
             my @defs;
             my CSS::Specification::Compiler $compiler .= new;
+            note " " ~ $submodule-path.join('::') if .isa(Pair);
+            warn "Duplicate sub-module: $submodule-path"
+                if %seen-module{$submodule-path}++;
+
             for $files.List -> $file {
-                note " - " ~ $file ~ (%seen{$file}++ ?? ' (duplicate)' !! '');
+                note " - " ~ $file ~ (%seen-file{$file}++ ?? ' (duplicate)' !! '');
                 @defs.append: $compiler.load-defs(:$file);
             }
 
-            mkdir join('/', flat $!lib, @base-id);
+            mkdir join('/', flat $!lib, @submodule-id);
+
+            my @grammar-id = @submodule-id.Slip, 'Grammar';
             my RakuAST::Package $grammar-ast = $compiler.compile-grammar(@grammar-id, :$scope);
             "$!lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
 
-            my @actions-id = @base-id.Slip, 'Actions';
+            my @actions-id = @submodule-id.Slip, 'Actions';
             my RakuAST::Package $actions-ast = $compiler.compile-actions(@actions-id, :$scope);
             "$!lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
 
-            my @external-id = @base-id.Slip, 'External';
+            my @external-id = @submodule-id.Slip, 'External';
             my RakuAST::Package $external-ast = $compiler.compile-external(@external-id, :$scope);
             "$!lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
 
@@ -51,7 +57,7 @@ method make-module($where, $namespace, @sources, :%inherit, Str :$lib) {
             my %child-props = $compiler.child-props;
             my %meta = @defs.&build-metadata(:%child-rules, :%child-props);
             %props{.key} //= .value for %meta.pairs;
-            @!made.push: @base-id;
+            @!made.push: @submodule-id;
         }
 
         %props{.key} //= .value for %inherit.pairs;
