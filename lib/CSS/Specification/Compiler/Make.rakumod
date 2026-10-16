@@ -42,16 +42,16 @@ method make-module($where, $namespace, @sources, :%inherit, Str :$lib) {
             mkdir join('/', flat $!lib, @submodule-id);
 
             my @grammar-id = @submodule-id.Slip, 'Grammar';
-            my RakuAST::Package $grammar-ast = $compiler.compile-grammar(@grammar-id, :$scope);
-            "$!lib/{$grammar-ast.&path}.rakumod".IO.spurt: $grammar-ast.DEPARSE;
+            my RakuAST::Package $grammar = $compiler.compile-grammar(@grammar-id, :$scope);
 
             my @actions-id = @submodule-id.Slip, 'Actions';
-            my RakuAST::Package $actions-ast = $compiler.compile-actions(@actions-id, :$scope);
-            "$!lib/{$actions-ast.&path}.rakumod".IO.spurt: $actions-ast.DEPARSE;
+            my RakuAST::Package $actions = $compiler.compile-actions(@actions-id, :$scope);
 
             my @external-id = @submodule-id.Slip, 'External';
-            my RakuAST::Package $external-ast = $compiler.compile-external(@external-id, :$scope);
-            "$!lib/{$external-ast.&path}.rakumod".IO.spurt: $external-ast.DEPARSE;
+            my RakuAST::Package $external = $compiler.compile-external(@external-id, :$scope);
+
+            "$!lib/{.&path}.rakumod".IO.spurt: .DEPARSE
+                for $grammar, $actions, $external;
 
             my %child-rules = $compiler.child-rules;
             my %child-props = $compiler.child-props;
@@ -71,12 +71,13 @@ method make-module($where, $namespace, @sources, :%inherit, Str :$lib) {
 method link {
     for <Actions Grammar External> -> $link-type {
         my @link-id = flat @!root-id, 'Link', $link-type;
-        ("$!lib/" ~ @link-id.join('/')  ~ ".rakumod").IO.spurt: @!made.&link(@link-id).DEPARSE;
+        my RakuAST::Package $package = @!made.&link(@link-id);
+        ("$!lib/" ~ $package.&path  ~ ".rakumod").IO.spurt: $package.DEPARSE;
     }
 }
 
 sub link(@modules, @base-id) {
-    my $link-type = @base-id.tail;
+    my Str:D $link-type = @base-id.tail;
     my RakuAST::Name $name .= from-identifier-parts(|@base-id);
     my RakuAST::Statement @compiled = @modules.map: -> @module is copy {
         @module.append: $link-type;
@@ -97,13 +98,13 @@ sub link(@modules, @base-id) {
     my $body-type =  $link-type eq 'External' ?? RakuAST::RoleBody !! RakuAST::Block;
     my $body = $body-type.new: :body($block);
 
-    my $module-type = %(
+    my RakuAST::Package $package = %(
         :Actions(RakuAST::Class),
         :Grammar(RakuAST::Grammar),
         :External(RakuAST::Role),
     ){$link-type};
 
-    $module-type.new(
+    $package.new(
         :$name,
         :$body,
         :scope<unit>,
