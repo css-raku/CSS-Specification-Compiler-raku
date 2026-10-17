@@ -123,7 +123,11 @@ sub write-metadata(%props, $meta, :$lib = 'lib') {
         say 'use CSS::Module::Property;';
         say '';
         say "module $class-name \{";
-        say "    BEGIN our \$property = {%props.item.raku};";
+        say '    BEGIN our $property = %(';
+        for %props.sort {
+            say '         ' ~ .raku.subst(':inherit(Bool::False)', ':!inherit').subst(':inherit(Bool::True)', ':inherit') ~ ',';
+        }
+        say '       );';
         # todo: BEGIN our \$index = ... ; ## Missing serialize REPR function for REPR
         say '    our enum prop-names <' ~ %props.keys.sort.join(' ') ~ '>;';
         say q:to<END>;
