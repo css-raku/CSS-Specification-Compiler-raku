@@ -30,13 +30,13 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
         seq (
             'i'.&modifier,
             RakuAST::Regex::CapturingGroup.new(
-                $sym.&lit.&seq
+                $sym.&lit'r.&seq
             ).&ws,
 
             RakuAST::Regex::Quote.new(
                 RakuAST::QuotedString.new(
                     segments   => (
-                        RakuAST::StrLiteral.new(":"),
+                        ":".&lit's,
                     )
                 )
             ).&ws,
@@ -58,7 +58,7 @@ sub property-decl(Str:D $sym, :$quant, Str:D :$base-val!) {
 sub at-rule-decl(Str:D $sym, Str:D :$base-val!) {
     my RakuAST::Name $rule-name = "decl:sym<\@$sym>".&name;
     my RakuAST::Regex::Assertion::Named $assertion = $base-val.&assertion(:!capturing);
-    my $rule-body = ('@'.&lit,
+    my $rule-body = ('@'.&lit'r,
                      RakuAST::Regex::Assertion::Alias.new(
                          :name<at-rule>, :$assertion
                      )
@@ -107,7 +107,7 @@ multi sub compile(:rule-spec(%)! (Str :$rule!, :$spec!, Str :$synopsis!)) {
 multi sub compile(:at-rule-spec(%)! (Str :$at-rule!, :$spec!, Str :$synopsis!)) {
     my RakuAST::Regex $body = $spec.&compile;
     $body = (
-        RakuAST::Regex::CapturingGroup.new(('i'.&modifier, $at-rule.&lit).&seq).&ws,
+        RakuAST::Regex::CapturingGroup.new(('i'.&modifier, $at-rule.&lit'r).&seq).&ws,
         $body.&ws,
     ).&seq;
     my $base-val = 'at-rule-' ~ $at-rule;
@@ -187,11 +187,11 @@ multi sub assertion(Str:D $id, Bool :$capturing = True) {
 
 proto sub arg(|) is export {*}
 multi sub arg(Str:D $arg) {
-    RakuAST::ArgList.new: RakuAST::StrLiteral.new($arg);
+    RakuAST::ArgList.new: $arg.&lit's;
 }
 
 multi sub arg(Int:D $arg) {
-    RakuAST::ArgList.new: RakuAST::IntLiteral.new($arg);
+    RakuAST::ArgList.new: $arg.&lit'i;
 }
 
 multi sub whitespaced(RakuAST::Regex::WithWhitespace) { True }
@@ -205,8 +205,6 @@ multi sub ws(RakuAST::Regex::Term $r) { RakuAST::Regex::WithWhitespace.new($r) }
 multi sub ws(RakuAST::Regex $r) {
     $r.&group.&ws;
 }
-
-sub lit(Str:D $s) is export { RakuAST::Regex::Literal.new($s) }
 
 multi sub group(@seq) { @seq.&seq.&group }
 multi sub group(RakuAST::Regex::Group $g) {$g}
@@ -290,7 +288,7 @@ multi sub compile(Str:D :$rule!) {
 
 multi sub compile(Str:D :at-rule($rule)!) {
     my $at-rule = 'at-rule-' ~ $rule;
-    ('@'.&lit, $at-rule.&assertion).&seq;
+    ('@'.&lit'r, $at-rule.&assertion).&seq;
 }
 
 multi sub compile(:@keywords!) {
@@ -301,12 +299,12 @@ multi sub compile(:@numbers!) {
     choice @numbers.map(&lit-ws), 'number'.&assertion;
 }
 
-sub lit-ws(Str:D() $_) is export { .&lit.&ws }
+sub lit-ws(Str:D() $_) is export { .&lit'r.&ws }
 
 multi sub compile(Str:D :$op! where $_ eq ',' && $*IN-PROTO) {
-    $op.&lit
+    $op.&lit'r
 }
-multi sub compile(Str:D :lit($_)!) { .&lit }
+multi sub compile(Str:D :lit($_)!) { .&lit'r }
 multi sub compile(Str:D :$op!) {
     my RakuAST::ArgList $args = $op.&arg;
     'op'.&assertion(:$args);
@@ -396,7 +394,7 @@ multi sub compile(:%func-spec! ( :$func!, :$rule=$func, :%signature!, :$synopsis
     );
     my $args = [(:%signature).&compile.&ws, Usage].&seq(:alt).&ws.&group;
     my $body = ['i'.&modifier,
-                ($func ~ '(').&lit-ws, $args.&ws, ')'.&lit].&seq.&ws;
+                ($func ~ '(').&lit-ws, $args.&ws, ')'.&lit'r].&seq.&ws;
     my Str $leading = $_ ~ "\n" given $synopsis;
     $rule.&name.&rule($body).declarator-docs(:$leading);
 }

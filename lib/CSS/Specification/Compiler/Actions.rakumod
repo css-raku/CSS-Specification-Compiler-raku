@@ -30,7 +30,7 @@ method link-actions(@group-id, @modules, Str :$scope = 'our') {
 }
 
 sub call-make-func(Str $name) {
-    my RakuAST::StrLiteral $lit .= new($name);
+    my RakuAST::StrLiteral $lit = $name.&lit's;
     my RakuAST::QuotedString $qstr .= new: :segments($lit,);
     RakuAST::Blockoid.new(
         RakuAST::Var::Attribute::Public.new(
@@ -75,12 +75,12 @@ sub compile-rule(Str $id) {
                         RakuAST::QuotedString.new(
                             processors => <words val>,
                             segments   => (
-                                RakuAST::StrLiteral.new($id),
+                                $id.&lit's,
                             )
                         )
                     ),
                     postfix => RakuAST::Call::Method.new(
-                        name => RakuAST::Name.from-identifier("ast")
+                        name => "ast".&name,
                     )
                 )
             )
@@ -95,9 +95,8 @@ method !actions-methods {
         :parameters[ '$/'.&param ]
     );
 
-    my $val-body  = 'list'.&compile-action;
-    my $rule-body = 'rule'.&compile-action;
-    my $at-rule-body = 'at-rule'.&compile-action;
+    my RakuAST::Blockoid $rule-body = 'rule'.&compile-action;
+    my RakuAST::Blockoid $at-rule-body = 'at-rule'.&compile-action;
 
     for @.defs -> $def {
         if $def<rule-spec> -> % (:$rule!, *%) {
