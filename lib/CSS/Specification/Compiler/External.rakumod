@@ -8,7 +8,7 @@ method compile-external(@role-id, Str :$scope = 'our') {
     my RakuAST::Method @methods = self!interface-methods;
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
     my RakuAST::Blockoid $body .= new: @expressions.&statements;
-    my RakuAST::Name $name .= from-identifier-parts(|@role-id);
+    my RakuAST::Name $name = @role-id.&name;
 
     RakuAST::Role.new(
         :$name,

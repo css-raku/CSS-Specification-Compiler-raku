@@ -1,6 +1,8 @@
 unit module CSS::Specification::Compiler::Util;
 
-sub name(Str:D $id) is export {  RakuAST::Name.from-identifier($id) }
+proto sub name($) is export {*};
+multi sub name(@parts) is export {  RakuAST::Name.from-identifier-parts(|@parts) }
+multi sub name(Str:D $id) is export {  RakuAST::Name.from-identifier($id) }
 
 sub param(Str:D $name) is export {
     RakuAST::Parameter.new(

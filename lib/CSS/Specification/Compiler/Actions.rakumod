@@ -10,21 +10,19 @@ method compile-actions(@actions-id, Str :$scope = 'our', Bool :$role) {
     my RakuAST::Statement::Expression @expressions = @methods.map(&expression);
     my RakuAST::StatementList $statements = @expressions.&statements;
     my RakuAST::Blockoid $body .= new: $statements;
-    my RakuAST::Name $name .= from-identifier-parts(|@actions-id);
+    my RakuAST::Name $name = @actions-id.&name;
     $role
         ?? RakuAST::Role.new( :$name, :body(RakuAST::RoleBody.new: :$body), :$scope)
         !! RakuAST::Class.new(:$name, :body(RakuAST::Block.new: :$body), :$scope );
 }
 
 method link-actions(@group-id, @modules, Str :$scope = 'our') {
-    my RakuAST::Name @module-names = @modules.map: -> @module-ids {
-        RakuAST::Name.from-identifier-parts: |@module-ids;
-    }
+    my RakuAST::Name @module-names = @modules.map(&name);
     my RakuAST::Statement @used = @module-names.map: -> $module-name { RakuAST::Statement::Use.new: :$module-name }
     my RakuAST::Trait::Is @traits =  @module-names.map: -> $name {
         RakuAST::Trait::Is.new: :$name;
     }
-    my RakuAST::Name $name .= from-identifier-parts(|@group-id);
+    my RakuAST::Name $name = @group-id.&name;
     my RakuAST::Blockoid $body .= new: @used.&statements;
     RakuAST::Class.new(:$name, :$scope, :$body, :@traits );
 }
@@ -44,17 +42,17 @@ sub call-make-func(Str $name) {
 
 }
 
-sub compile-action(Str $id) {
+sub compile-build-action(Str $action) {
     RakuAST::Blockoid.new(
         RakuAST::Call::Name::WithoutParentheses.new(
-            name => RakuAST::Name.from-identifier("make"),
+            name => "make".&name,
             args => RakuAST::ArgList.new(
                 RakuAST::ApplyPostfix.new(
                     operand => RakuAST::Var::Attribute::Public.new(
                         name => "\$.build"
                     ),
                     postfix => RakuAST::Call::Method.new(
-                        name => RakuAST::Name.from-identifier($id),
+                        name => $action.&name,
                         args => RakuAST::ArgList.new(
                             RakuAST::Var::Lexical.new("\$/")
                         )
@@ -68,7 +66,7 @@ sub compile-action(Str $id) {
 sub compile-rule(Str $id) {
     RakuAST::Blockoid.new(
         RakuAST::Call::Name::WithoutParentheses.new(
-            name => RakuAST::Name.from-identifier("make"),
+            name => "make".&name,
             args => RakuAST::ArgList.new(
                 RakuAST::ApplyPostfix.new(
                     operand => RakuAST::Var::NamedCapture.new(
@@ -88,6 +86,30 @@ sub compile-rule(Str $id) {
     );
 }
 
+multi sub compile-def(:%rule-spec! (:$rule!, :$spec!, *%), :$signature!) {
+    my RakuAST::Name $name = $rule.&name;
+    my RakuAST::Blockoid $body = 'rule'.&compile-build-action;
+    [ RakuAST::Method.new(:$name, :$signature, :$body), ]
+}
+
+multi sub compile-def(:%at-rule-spec! (:at-rule($sym)!, *%), :$signature!) {
+    my $proto-name = "at-rule:sym<$sym>".&name;
+    my $at-rule = 'at-rule-' ~ $sym;
+    my $body = $at-rule.&compile-rule;
+    my RakuAST::Name $name = $at-rule.&name;
+    my RakuAST::Blockoid $at-rule-body = 'at-rule'.&compile-build-action;
+
+    [ RakuAST::Method.new(name => $proto-name, :$signature, :$body),
+      RakuAST::Method.new(:$name, :$signature, body => $at-rule-body) ]
+}
+multi sub compile-def( :%func-spec! (:$rule!, :$func!, *%), :$signature!) {
+    my RakuAST::Name $name = $rule.&name;
+    my RakuAST::Blockoid $body = $func.&call-make-func;
+    [ RakuAST::Method.new(:$name, :$signature, :$body), ]
+}
+multi sub compile-def(:%func-spec!, :signature($)) { [] }
+multi sub compile-def(:%prop-spec!, :signature($)) { [] }
+
 method !actions-methods {
     my RakuAST::Method @methods;
 
@@ -95,29 +117,7 @@ method !actions-methods {
         :parameters[ '$/'.&param ]
     );
 
-    my RakuAST::Blockoid $rule-body = 'rule'.&compile-action;
-    my RakuAST::Blockoid $at-rule-body = 'at-rule'.&compile-action;
-
-    for @.defs -> $def {
-        if $def<rule-spec> -> % (:$rule!, *%) {
-            my RakuAST::Name $name = $rule.&name;
-            @methods.push: RakuAST::Method.new: :$name, :$signature, body => $rule-body;
-        }
-        elsif $def<at-rule-spec> -> % (:at-rule($sym)!, *%) {
-            my $proto-name = "at-rule:sym<$sym>".&name;
-            my $at-rule = 'at-rule-' ~ $sym;
-            my $body = $at-rule.&compile-rule;
-            @methods.push: RakuAST::Method.new: name => $proto-name, :$signature, :$body;
-            my RakuAST::Name $name = $at-rule.&name;
-            @methods.push: RakuAST::Method.new: :$name, :$signature, body => $at-rule-body;
-        }
-        elsif $def<func-spec> -> % (:$rule, :$func, *%){
-            if $rule {
-                my RakuAST::Name $name = $rule.&name;
-                @methods.push: RakuAST::Method.new: :$name, :$signature, body => $func.&call-make-func;
-            }
-        }
-    }
+    @methods.append: compile-def(|$_, :$signature) for @.defs;
 
     for $.actions.funcs.keys.sort {
         my $name = .&name;

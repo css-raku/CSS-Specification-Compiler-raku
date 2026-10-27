@@ -404,7 +404,7 @@ multi sub compile($arg) { compile |$arg }
 method compile-grammar(@grammar-id, Str :$scope = 'our', Bool :$role) {
     my $*ACTIONS = $.actions;
     my $*IN-PROTO = False;
-    my RakuAST::Name $name .= from-identifier-parts(|@grammar-id);
+    my RakuAST::Name $name = @grammar-id.&name;
     my @compiled = flat @.defs.map: { my $*VAR = 'A'; .&compile};
     my RakuAST::StatementList $statements .= new: |@compiled;
     my RakuAST::Blockoid $block .= new: $statements;
