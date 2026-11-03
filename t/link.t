@@ -1,17 +1,18 @@
 use Test;
 use CSS::Grammar::Test;
-use CSS::Grammar::CSS21;
+use CSS::Grammar::CSS3;
 use CSS::Specification::Compiler;
 use CSS::Specification::Compiler::Make;
 use JSON::Fast;
 use lib 't';
 
 my $main-src = $*SPEC.catfile('examples', 'css21-aural.tsv');
-my $Border = $*SPEC.catfile('examples', 'css21-border-example.tsv');
+my $Border = $*SPEC.catfile('examples', 'css21-border-sample.tsv');
+my $PagedMedia = $*SPEC.catfile('examples', 'css3-paged-media.tsv' );
 
 lives-ok {
     my CSS::Specification::Compiler::Make $maker .= new;
-    $maker.make-module: '.', "Test::CSS::Aural", ($main-src, :$Border), :lib<t/lib>;
+    $maker.make-module: '.', "Test::CSS::Aural", ($main-src, :$Border, :$PagedMedia), :lib<t/lib>;
     $maker.link;
 }, 'make';
 
@@ -21,7 +22,7 @@ ok $actions.defined, '::("Test::CSS::Aural::Actions").new';
 
 my $aural-class;
 lives-ok {$aural-class = (require ::("Test::CSS::Aural::Grammar"))}, 'grammar composition - lives';
-isa-ok $aural-class, CSS::Grammar::CSS21;
+isa-ok $aural-class, CSS::Grammar::CSS3;
 
 for ('.aural-test { stress: 42; speech-rate: fast; volume: inherit; voice-family: female; }' =>
      ast => :stylesheet[
@@ -43,6 +44,18 @@ for ('.aural-test { stress: 42; speech-rate: fast; volume: inherit; voice-family
                                  :property{
                                      :ident<border-color>,
                                      :expr[ :rgb[ :num(170), :num(170), :num(170) ]],
+                                 }
+                             ],
+                    }
+                 ],
+     'body { size: a4 landscape }' =>
+     ast => :stylesheet[
+                    :ruleset{
+                        :selectors[ :selector[ :simple-selector[ :qname(:element-name<body>) ] ]],
+                        :declarations[
+                                 :property{
+                                     :ident<size>,
+                                     :expr[ :keyw<a4>, :keyw<landscape> ],
                                  }
                              ],
                     }

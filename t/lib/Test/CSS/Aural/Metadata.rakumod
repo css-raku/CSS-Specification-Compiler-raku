@@ -22,6 +22,7 @@ module Test::CSS::Aural::Metadata {
          :pitch-range(${:default("50"), :inherit, :synopsis("<number>")}),
          :play-during(${:default("auto"), :!inherit, :synopsis("<uri> [ mix || repeat ]? | auto | none")}),
          :richness(${:default("50"), :inherit, :synopsis("<number>")}),
+         :size(${:default("auto"), :!inherit, :synopsis("<length>\{1,2} | auto | [ <page-size> || [ portrait | landscape] ]")}),
          :speak(${:default("normal"), :inherit, :synopsis("normal | none | spell-out")}),
          :speak-header(${:default("once"), :inherit, :synopsis("once | always")}),
          :speak-numeral(${:default("continuous"), :inherit, :synopsis("digits | continuous")}),
@@ -31,7 +32,7 @@ module Test::CSS::Aural::Metadata {
          :voice-family(${:default("depends on user agent"), :inherit, :synopsis("[<generic-voice> | <specific-voice> ]#")}),
          :volume(${:default("medium"), :inherit, :synopsis("<number> | <percentage> | silent | x-soft | soft | medium | loud | x-loud")}),
        );
-    our enum prop-names <azimuth border-bottom-color border-color border-left-color border-right-color border-top-color cue cue-after cue-before elevation pause pause-after pause-before pitch pitch-range play-during richness speak speak-header speak-numeral speak-punctuation speech-rate stress voice-family volume>;
+    our enum prop-names <azimuth border-bottom-color border-color border-left-color border-right-color border-top-color cue cue-after cue-before elevation pause pause-after pause-before pitch pitch-range play-during richness size speak speak-header speak-numeral speak-punctuation speech-rate stress voice-family volume>;
     our sub index {
         state $ //= do {
             my $enums := prop-names.enums;
