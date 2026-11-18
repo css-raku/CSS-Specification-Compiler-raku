@@ -8,25 +8,27 @@
   "depends": [
     "CSS::Specification:ver<0.5.2+>"
   ],
-    "description": "A RakuAST based compiler for CSS Specification mini-syntax",
+  "description": "A RakuAST based compiler for CSS Specification mini-syntax",
   "license": "Artistic-2.0",
-    "name": "CSS::Specification::Compiler",
+  "name": "CSS::Specification::Compiler",
   "perl": "6.c",
   "provides": {
     "CSS::Specification::Compiler": "lib/CSS/Specification/Compiler.rakumod",
-      "CSS::Specification::Compiler::Make": "lib/CSS/Specification/Compiler/Make.rakumod",
-    "CSS::Specification::Compiler::Util": "lib/CSS/Specification/Compiler/Util.rakumod",
-    "CSS::Specification::Compiler::Grammars": "lib/CSS/Specification/Compiler/Grammars.rakumod",
+    "CSS::Specification::Compiler::Actions": "lib/CSS/Specification/Compiler/Actions.rakumod",
     "CSS::Specification::Compiler::External": "lib/CSS/Specification/Compiler/External.rakumod",
-    "CSS::Specification::Compiler::Actions": "lib/CSS/Specification/Compiler/Actions.rakumod"
+    "CSS::Specification::Compiler::Grammars": "lib/CSS/Specification/Compiler/Grammars.rakumod",
+    "CSS::Specification::Compiler::Make": "lib/CSS/Specification/Compiler/Make.rakumod",
+    "CSS::Specification::Compiler::Puncuation": "lib/CSS/Specification/Compiler/Puncuation.rakumod",
+    "CSS::Specification::Compiler::Util": "lib/CSS/Specification/Compiler/Util.rakumod"
   },
   "resources": [
   ],
   "source-url": "https://github.com/css-raku/CSS-Specification-Compiler-raku.git",
   "tags": [
-      "rakuast", "css"
+    "rakuast",
+    "css"
   ],
   "test-depends": [
   ],
-  "version": "0.4.15"
+  "version": "0.0.1"
 }
