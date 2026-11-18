@@ -1,4 +1,7 @@
 {{$NEXT}}
 
+0.0.2  2026-11-18T17:39:44+13:00
+   - Reinstate README.md. Clobbered in initial release.
+
 0.0.1  2026-11-18T16:51:29+13:00
    - Initial release.
