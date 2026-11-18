@@ -77,17 +77,6 @@ sub find-child-props($rule-name, :%child-rules!, :%child-props!, :%seen = %()) {
     @kids;
 }
 
-sub remove-child(%meta, $prop) {
-    with %meta<children> {
-        if .grep: {$_ ne $prop} -> @children {
-            $_ = @children;
-        }
-        else {
-            %meta<children>:delete;
-        }
-    }
-}
-
 multi sub is-parent-name('line-height', 'font') { True }
 multi sub is-parent-name('grid-template', 'grid') { False }
 multi sub is-parent-name($_, $parent) {
