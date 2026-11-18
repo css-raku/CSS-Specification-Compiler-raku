@@ -91,7 +91,6 @@ multi sub compile-def(:%rule-spec! (:$rule!, :$spec!, *%), :$signature!) {
     my RakuAST::Blockoid $body = 'rule'.&compile-build-action;
     [ RakuAST::Method.new(:$name, :$signature, :$body), ]
 }
-
 multi sub compile-def(:%at-rule-spec! (:at-rule($sym)!, *%), :$signature!) {
     my $proto-name = "at-rule:sym<$sym>".&name;
     my $at-rule = 'at-rule-' ~ $sym;
@@ -121,7 +120,8 @@ method !actions-methods {
 
     for $.actions.funcs.keys.sort {
         my $name = .&name;
-        @methods.push: RakuAST::Method.new: :$name, :$signature, body => .&call-make-func;
+        my $body = .&call-make-func;
+        @methods.push: RakuAST::Method.new: :$name, :$signature, :$body;
     }
 
     @methods;
